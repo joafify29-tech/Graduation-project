@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "913019059025",
+    "project_id": "ai-recovery-app-c6fef",
+    "storage_bucket": "ai-recovery-app-c6fef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913019059025:android:6a5b9737f63cd3f4367170",
+        "android_client_info": {
+          "package_name": "com.example.ai_recovery_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQB5MXzna7TJJ_iTobH4CdapYUTk7LZe0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
