@@ -30,40 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _createAdminAccount();
-  }
-
-  Future<void> _createAdminAccount() async {
-    try {
-      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: 'admin@app.com',
-        password: '1234567',
-      );
-      await FirebaseFirestore.instance.collection('users').doc(cred.user!.uid).set({
-        'name': 'System Admin',
-        'email': 'admin@app.com',
-        'role': 'Admin',
-        'status': 'Active',
-      });
-      debugPrint("Admin created successfully!");
-    } catch (e) {
-      debugPrint("Admin creation error (probably already exists): $e");
-    }
-
-    try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'Admin')
-          .get();
-      for (var doc in querySnapshot.docs) {
-        if (doc.data()['email'] != 'admin@app.com') {
-          await doc.reference.update({'role': 'Referral'});
-        }
-      }
-      debugPrint("Cleaned up other admin roles.");
-    } catch (e) {
-      debugPrint("Cleanup error: $e");
-    }
   }
 
   @override
