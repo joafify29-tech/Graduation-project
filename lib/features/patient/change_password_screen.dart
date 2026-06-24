@@ -17,6 +17,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   String _email = "";
   String? _uid;
 
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _isPasswordVisibleCurrent = false;
+  bool _isPasswordVisibleNew = false;
+  bool _isPasswordVisibleConfirm = false;
+  bool _isChanging = false;
+
   @override
   void initState() {
     super.initState();
@@ -144,6 +152,139 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   @override
+  void dispose() {
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _changePasswordDirectly() async {
+    final currentPassword = _currentPasswordController.text.trim();
+    final newPassword = _newPasswordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (currentPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("All fields are required."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("New passwords do not match."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Password must be at least 6 characters."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isChanging = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+        // Reauthenticate
+        AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: currentPassword,
+        );
+        
+        await user.reauthenticateWithCredential(credential);
+        
+        // Update password
+        await user.updatePassword(newPassword);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Password changed successfully!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _currentPasswordController.clear();
+          _newPasswordController.clear();
+          _confirmPasswordController.clear();
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        String errMsg = e.toString();
+        if (errMsg.contains("wrong-password") || errMsg.contains("invalid-credential")) {
+          errMsg = "Incorrect current password.";
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errMsg),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isChanging = false);
+      }
+    }
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required bool isVisible,
+    required VoidCallback onToggleVisibility,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xff1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: !isVisible,
+        style: TextStyle(color: textColor),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          border: InputBorder.none,
+          suffixIcon: IconButton(
+            icon: Icon(
+              isVisible ? Icons.visibility : Icons.visibility_off,
+              color: Colors.grey,
+            ),
+            onPressed: onToggleVisibility,
+          ),
+        ),
+      ),
+    }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
@@ -163,11 +304,78 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xff2F6FED)))
-          : StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('password_reset_requests')
-                  .where('uid', isEqualTo: _uid)
-                  .snapshots(),
+          : _role == 'admin'
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      Text(
+                        "Change Admin Password",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Enter your current password and your new password to update it directly.",
+                        style: TextStyle(color: subtextColor, fontSize: 14),
+                      ),
+                      const SizedBox(height: 30),
+                      _buildTextField(
+                        controller: _currentPasswordController,
+                        label: "Current Password",
+                        isVisible: _isPasswordVisibleCurrent,
+                        onToggleVisibility: () => setState(() => _isPasswordVisibleCurrent = !_isPasswordVisibleCurrent),
+                      ),
+                      _buildTextField(
+                        controller: _newPasswordController,
+                        label: "New Password",
+                        isVisible: _isPasswordVisibleNew,
+                        onToggleVisibility: () => setState(() => _isPasswordVisibleNew = !_isPasswordVisibleNew),
+                      ),
+                      _buildTextField(
+                        controller: _confirmPasswordController,
+                        label: "Confirm New Password",
+                        isVisible: _isPasswordVisibleConfirm,
+                        onToggleVisibility: () => setState(() => _isPasswordVisibleConfirm = !_isPasswordVisibleConfirm),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff2F6FED),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: _isChanging ? null : _changePasswordDirectly,
+                          child: _isChanging
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
+                                  "Update Password",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('password_reset_requests')
+                      .where('uid', isEqualTo: _uid)
+                      .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator(color: Color(0xff2F6FED)));
