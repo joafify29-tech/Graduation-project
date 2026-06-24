@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/time_service.dart';
 import 'patient_mood_success_screen.dart';
+import 'patient_ai_chat_screen.dart';
 
 class PatientMoodScreen extends StatefulWidget {
   const PatientMoodScreen({super.key});
@@ -52,7 +54,7 @@ Future<void> saveMood() async {
       (e) => e['level'] == selectedMood,
     );
 
-    final now = DateTime.now();
+    final now = TimeService.now();
 
     // Save Mood History
     await FirebaseFirestore.instance
@@ -62,7 +64,7 @@ Future<void> saveMood() async {
       "mood": selectedData['label'],
       "moodLevel": selectedMood,
       "notes": notesController.text.trim(),
-      "createdAt": Timestamp.now(),
+      "createdAt": Timestamp.fromDate(now),
     });
 
     // Get all mood updates for this patient
@@ -150,9 +152,10 @@ Future<void> saveMood() async {
         .collection('referrals')
         .doc(uid)
         .update({
+      "mood": selectedData['label'],
       "currentMood": selectedData['label'],
       "currentMoodLevel": selectedMood,
-      "lastMoodUpdate": Timestamp.now(),
+      "lastMoodUpdate": Timestamp.fromDate(TimeService.now()),
       "currentStreak": currentStreak,
       "longestStreak": longestStreak,
       "totalMoodUpdates": totalMoodUpdates,
@@ -160,13 +163,32 @@ Future<void> saveMood() async {
 
     if (!mounted) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const PatientMoodSuccessScreen(),
-      ),
-    );
+    final notes = notesController.text.trim();
+    if (notes.isNotEmpty) {
+      final newSessionRef = FirebaseFirestore.instance
+          .collection('chats')
+          .doc(uid)
+          .collection('sessions')
+          .doc();
+          
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PatientAiChatScreen(
+            sessionId: newSessionRef.id,
+            initialMessage: notes,
+          ),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              const PatientMoodSuccessScreen(),
+        ),
+      );
+    }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -229,20 +251,26 @@ Widget buildMoodItem(
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+      backgroundColor: bg,
 
       appBar: AppBar(
-        backgroundColor: const Color(0xffF7F8FA),
+        backgroundColor: bg,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(
-          color: Colors.black,
+        iconTheme: IconThemeData(
+          color: textColor,
         ),
-        title: const Text(
+        title: Text(
           "Mood Check-In",
           style: TextStyle(
-            color: Colors.black,
+            color: textColor,
           ),
         ),
       ),
@@ -258,7 +286,7 @@ Widget buildMoodItem(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xffE8F0FF),
+                color: isDark ? const Color(0xff1A2A4A) : const Color(0xffE8F0FF),
                 borderRadius:
                     BorderRadius.circular(40),
               ),
@@ -271,20 +299,21 @@ Widget buildMoodItem(
 
             const SizedBox(height: 20),
 
-            const Text(
+            Text(
               "How are you feeling today?",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: textColor,
               ),
             ),
 
             const SizedBox(height: 8),
 
-            const Text(
+            Text(
               "Take a moment to check in with yourself.",
               style: TextStyle(
-                color: Colors.grey,
+                color: subtextColor,
               ),
             ),
 
@@ -303,13 +332,14 @@ Widget buildMoodItem(
 
             const SizedBox(height: 30),
 
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 "Add optional notes",
                 style: TextStyle(
                   fontWeight:
                       FontWeight.w600,
+                  color: textColor,
                 ),
               ),
             ),
@@ -319,11 +349,13 @@ Widget buildMoodItem(
             TextField(
               controller: notesController,
               maxLines: 4,
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 hintText:
                     "What's on your mind?",
+                hintStyle: TextStyle(color: subtextColor),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: cardBg,
                 border: OutlineInputBorder(
                   borderRadius:
                       BorderRadius.circular(
@@ -341,7 +373,7 @@ Widget buildMoodItem(
                   const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color:
-                    const Color(0xffEEF4FF),
+                    isDark ? const Color(0xff1A2A4A) : const Color(0xffEEF4FF),
                 borderRadius:
                     BorderRadius.circular(
                         16),
@@ -349,16 +381,17 @@ Widget buildMoodItem(
               child: Row(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
-                children: const [
-                  Icon(
+                children: [
+                  const Icon(
                     Icons.lightbulb_outline,
                     color:
                         Color(0xff2F6FED),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       "Tracking your mood helps identify triggers and supports your recovery journey.",
+                      style: TextStyle(color: textColor),
                     ),
                   ),
                 ],

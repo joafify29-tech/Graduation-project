@@ -16,8 +16,14 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF3F4F6);
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : const Color(0xff64748B);
+    final fieldBg = isDark ? const Color(0xff2A2A2A) : Colors.grey.shade200;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
+      backgroundColor: bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -28,16 +34,17 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Referral History",
-                    style:
-                        TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                   ),
                   Row(
-                    children: const [
-                      Icon(Icons.language),
-                      SizedBox(width: 10),
-                      Icon(Icons.dark_mode),
+                    children: [
+                      Icon(Icons.language, color: textColor),
                     ],
                   )
                 ],
@@ -52,11 +59,13 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
                     searchText = value.toLowerCase();
                   });
                 },
+                style: TextStyle(color: textColor),
                 decoration: InputDecoration(
                   hintText: "Search patient name...",
-                  prefixIcon: const Icon(Icons.search),
+                  hintStyle: TextStyle(color: subtextColor),
+                  prefixIcon: Icon(Icons.search, color: subtextColor),
                   filled: true,
-                  fillColor: Colors.grey.shade200,
+                  fillColor: fieldBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
                     borderSide: BorderSide.none,
@@ -90,15 +99,18 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
+                      ConnectionState.waiting) {
                       return const Center(
                           child: CircularProgressIndicator());
                     }
 
                     if (!snapshot.hasData ||
                         snapshot.data!.docs.isEmpty) {
-                      return const Center(
-                        child: Text("No referrals yet"),
+                      return Center(
+                        child: Text(
+                          "No referrals yet",
+                          style: TextStyle(color: subtextColor),
+                        ),
                       );
                     }
 
@@ -156,6 +168,7 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
 
   // 🔥 Filter Button
   Widget filterButton(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = selectedFilter == title;
 
     return GestureDetector(
@@ -168,13 +181,13 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey.shade200,
+          color: isSelected ? Colors.blue : (isDark ? const Color(0xff2A2A2A) : Colors.grey.shade200),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
+            color: isSelected ? Colors.white : (isDark ? Colors.grey[400]! : Colors.black),
           ),
         ),
       ),
@@ -203,14 +216,18 @@ class HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : const Color(0xff64748B);
 
+    Color badgeColor;
     if (status == "ACTIVE") {
-      color = Colors.green;
+      badgeColor = isDark ? Colors.greenAccent : Colors.green;
     } else if (status == "PENDING") {
-      color = Colors.orange;
+      badgeColor = isDark ? Colors.orangeAccent : Colors.orange;
     } else {
-      color = Colors.red;
+      badgeColor = isDark ? Colors.redAccent : Colors.red;
     }
 
     return GestureDetector(
@@ -229,12 +246,16 @@ class HistoryCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
-            const CircleAvatar(radius: 25),
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: isDark ? const Color(0xff2A2A2A) : const Color(0xffEDEFF2),
+              child: Icon(Icons.person, color: isDark ? Colors.white54 : Colors.black54),
+            ),
 
             const SizedBox(width: 15),
 
@@ -242,20 +263,29 @@ class HistoryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
 
                   const SizedBox(height: 5),
 
-                  Text(type,
-                      style: const TextStyle(color: Colors.blue)),
+                  Text(
+                    type,
+                    style: const TextStyle(color: Color(0xff2F6FED)),
+                  ),
 
                   const SizedBox(height: 5),
 
                   Text(
                     "Referral sent: $date",
-                    style: const TextStyle(
-                        color: Colors.grey, fontSize: 12),
+                    style: TextStyle(
+                      color: subtextColor,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -265,12 +295,12 @@ class HistoryCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: badgeColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 status,
-                style: TextStyle(color: color, fontSize: 12),
+                style: TextStyle(color: badgeColor, fontSize: 12, fontWeight: FontWeight.w600),
               ),
             )
           ],

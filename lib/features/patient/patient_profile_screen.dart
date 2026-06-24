@@ -3,6 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../auth/login_screen.dart';
+import 'change_password_screen.dart';
+import 'help_center_screen.dart';
+import 'contact_support_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_conditions_screen.dart';
+import 'security_settings_screen.dart';
 
 class PatientProfileScreen extends StatelessWidget {
   const PatientProfileScreen({super.key});
@@ -24,17 +30,20 @@ class PatientProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser!.uid;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
-
+      backgroundColor: bg,
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('referrals')
             .doc(uid)
             .snapshots(),
         builder: (context, snapshot) {
-
           if (!snapshot.hasData) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -42,241 +51,155 @@ class PatientProfileScreen extends StatelessWidget {
           }
 
           final data =
-              snapshot.data!.data()
-                      as Map<String, dynamic>? ??
-                  {};
+              snapshot.data!.data() as Map<String, dynamic>? ?? {};
 
-          final name =
-              data['name'] ?? "Patient";
-
-          final email =
-              data['email'] ?? "";
-
-          final addiction =
-              data['addiction'] ?? "";
-
-          final doctorName =
-              data['doctorName'] ??
-                  "Not Assigned";
+          final name = data['name'] ?? "Patient";
+          final email = data['email'] ?? "";
+          final addiction = data['addiction'] ?? "";
+          final doctorName = data['doctorName'] ?? "Not Assigned";
 
           return SafeArea(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   /// HEADER
-
                   Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-
-                      const Text(
+                      Text(
                         "Account Settings",
                         style: TextStyle(
                           fontSize: 28,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
-
                       IconButton(
                         onPressed: () {},
-                        icon: const Icon(
-                          Icons
-                              .notifications_none,
-                          color: Color(
-                              0xff2F6FED),
+                        icon: Icon(
+                          Icons.notifications_none,
+                          color: isDark ? Colors.white70 : const Color(0xff2F6FED),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(
-                      height: 20),
+                  const SizedBox(height: 20),
 
                   /// PROFILE CARD
-
                   Container(
-                    padding:
-                        const EdgeInsets.all(
-                            18),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-  color: Colors.white,
-  borderRadius:
-      BorderRadius.circular(24),
-  boxShadow: [
-    BoxShadow(
-      color: Colors.black12,
-      blurRadius: 15,
-      offset: Offset(0, 5),
-    ),
-  ],
-),
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: isDark
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                    ),
                     child: Column(
                       children: [
-
                         Row(
                           children: [
-
                             CircleAvatar(
-  radius: 42,
-                              backgroundColor:
-                                  const Color(
-                                      0xffD8C2AD),
+                              radius: 42,
+                              backgroundColor: const Color(0xffD8C2AD),
                               child: Text(
-                                name
-                                        .isNotEmpty
-                                    ? name[0]
-                                        .toUpperCase()
-                                    : "P",
-                                style:
-                                    const TextStyle(
-                                  color: Colors
-                                      .white,
-                                  fontSize:
-                                      28,
-                                  fontWeight:
-                                      FontWeight
-                                          .bold,
+                                name.isNotEmpty ? name[0].toUpperCase() : "P",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-
-                            const SizedBox(
-                                width: 15),
-
+                            const SizedBox(width: 15),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-
                                   Text(
                                     name,
-                                    style:
-                                        const TextStyle(
-                                      fontSize:
-                                          20,
-                                      fontWeight:
-                                          FontWeight
-                                              .bold,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
                                     ),
                                   ),
-
-                                  const SizedBox(
-                                      height:
-                                          4),
-
+                                  const SizedBox(height: 4),
                                   Text(
                                     email,
-                                    style:
-                                        const TextStyle(
-                                      color: Colors
-                                          .grey,
+                                    style: TextStyle(
+                                      color: subtextColor,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-
                             Container(
-                              padding:
-                                  const EdgeInsets
-                                      .symmetric(
-                                horizontal:
-                                    12,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
                                 vertical: 5,
                               ),
-                              decoration:
-                                  BoxDecoration(
-                                color: Colors
-                                    .green
-                                    .shade100,
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                            20),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xff1A3B2B) : Colors.green.shade100,
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              child:
-                                  const Text(
+                              child: const Text(
                                 "ACTIVE",
-                                style:
-                                    TextStyle(
-                                  color: Colors
-                                      .green,
-                                  fontWeight:
-                                      FontWeight
-                                          .bold,
+                                style: TextStyle(
+                                  color: Color(0xff34C759),
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(
-                            height: 20),
+                        const SizedBox(height: 20),
 
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment
-                                  .spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-
-                            const Text(
+                            Text(
                               "Recovery Focus",
-                              style:
-                                  TextStyle(
-                                color: Colors
-                                    .grey,
+                              style: TextStyle(
+                                color: subtextColor,
                               ),
                             ),
-
                             Text(
                               addiction,
-                              style:
-                                  const TextStyle(
-                                color: Color(
-                                    0xff2F6FED),
-                                fontWeight:
-                                    FontWeight
-                                        .w600,
+                              style: TextStyle(
+                                color: isDark ? Colors.blue.shade300 : const Color(0xff2F6FED),
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(
-                            height: 15),
+                        const SizedBox(height: 15),
 
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment
-                                  .spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-
-                            const Text(
+                            Text(
                               "Primary Doctor",
-                              style:
-                                  TextStyle(
-                                color: Colors
-                                    .grey,
+                              style: TextStyle(
+                                color: subtextColor,
                               ),
                             ),
-
                             Text(
                               doctorName,
-                              style:
-                                  const TextStyle(
-                                fontWeight:
-                                    FontWeight
-                                        .w600,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: textColor,
                               ),
                             ),
                           ],
@@ -285,80 +208,75 @@ class PatientProfileScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(
-                      height: 30),
+                  const SizedBox(height: 30),
 
-                  const Text(
+                  Text(
                     "GENERAL SETTINGS",
                     style: TextStyle(
                       fontSize: 12,
                       letterSpacing: 1,
-                      color: Colors.grey,
-                      fontWeight:
-                          FontWeight.w600,
+                      color: subtextColor,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
 
-                  const SizedBox(
-                      height: 10),
+                  const SizedBox(height: 10),
 
                   Container(
-                    decoration:
-                        BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  22),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(22),
                     ),
                     child: Column(
                       children: [
-
                         settingsTile(
+                          context,
                           Icons.edit_outlined,
                           "Edit Profile",
                           () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const EditProfileScreen(),
+                                builder: (_) => const EditProfileScreen(),
                               ),
                             );
                           },
                         ),
-
                         settingsTile(
+                          context,
                           Icons.lock_outline,
                           "Change Password",
-                          () {},
+                          () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ChangePasswordScreen(),
+                              ),
+                            );
+                          },
                         ),
-
                         settingsTile(
-                          Icons
-                              .notifications_none,
+                          context,
+                          Icons.notifications_none,
                           "Notification Preferences",
                           () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const NotificationSettingsScreen(),
+                                builder: (_) => const NotificationSettingsScreen(),
                               ),
                             );
                           },
                         ),
-
                         settingsTile(
-                          Icons
-                              .shield_outlined,
+                          context,
+                          Icons.shield_outlined,
                           "Privacy Settings",
                           () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const PrivacyScreen(),
+                                builder: (_) => const PrivacyScreen(),
                               ),
                             );
                           },
@@ -367,134 +285,126 @@ class PatientProfileScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(
-                      height: 25),
+                  const SizedBox(height: 25),
 
-                  const Text(
+                  Text(
                     "SUPPORT",
                     style: TextStyle(
                       fontSize: 12,
                       letterSpacing: 1,
-                      color: Colors.grey,
-                      fontWeight:
-                          FontWeight.w600,
+                      color: subtextColor,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
 
-                  const SizedBox(
-                      height: 10),
+                  const SizedBox(height: 10),
 
                   Container(
-                    decoration:
-                        BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  22),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(22),
                     ),
                     child: Column(
                       children: [
-
                         settingsTile(
+                          context,
                           Icons.help_outline,
                           "Help Center",
                           () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const SupportScreen(),
+                                builder: (_) => const SupportScreen(),
                               ),
                             );
                           },
                         ),
-
                         settingsTile(
+                          context,
                           Icons.description,
                           "Terms of Service",
-                          () {},
+                          () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const TermsConditionsScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(
-                      height: 30),
+                  const SizedBox(height: 30),
 
-                 SizedBox(
-  width: double.infinity,
-  height: 55,
-  child: ElevatedButton(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xffFFE5E5),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
-    ),
-    onPressed: () {
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? const Color(0xff3A1A1A) : const Color(0xffFFE5E5),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) {
+                            return AlertDialog(
+                              backgroundColor: cardBg,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              title: Text(
+                                "Log Out?",
+                                style: TextStyle(color: textColor),
+                              ),
+                              content: Text(
+                                "Are you sure you want to log out?",
+                                style: TextStyle(color: textColor),
+                              ),
+                              actions: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text("Keep Me Logged In"),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    logout(context);
+                                  },
+                                  child: const Text(
+                                    "Yes, Log Out",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: const Text(
+                        "Log Out",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
 
-      showDialog(
-        context: context,
-        builder: (_) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(25),
-            ),
-            title: const Text(
-              "Log Out?",
-            ),
-            content: const Text(
-              "Are you sure you want to log out?",
-            ),
-            actions: [
+                  const SizedBox(height: 20),
 
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  "Keep Me Logged In",
-                ),
-              ),
-
-              TextButton(
-                onPressed: () {
-                  logout(context);
-                },
-                child: const Text(
-                  "Yes, Log Out",
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    },
-    child: const Text(
-      "Log Out",
-      style: TextStyle(
-        color: Colors.red,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  ),
-),
-
-                  const SizedBox(
-                      height: 20),
-
-                  const Center(
+                  Center(
                     child: Text(
                       "AI Recovery v2.4.0",
-                      style:
-                          TextStyle(
-                        color:
-                            Colors.grey,
-                        fontSize:
-                            12,
+                      style: TextStyle(
+                        color: subtextColor,
+                        fontSize: 12,
                       ),
                     ),
                   ),
@@ -508,58 +418,53 @@ class PatientProfileScreen extends StatelessWidget {
   }
 
   Widget settingsTile(
+    BuildContext context,
     IconData icon,
     String title,
     VoidCallback onTap,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return ListTile(
       leading: Container(
-        padding:
-            const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color:
-              const Color(0xffEEF4FF),
-          borderRadius:
-              BorderRadius.circular(
-                  12),
+          color: isDark ? const Color(0xff1A2A4A) : const Color(0xffEEF4FF),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           icon,
-          color:
-              const Color(0xff2F6FED),
+          color: isDark ? Colors.blue.shade300 : const Color(0xff2F6FED),
         ),
       ),
-      title: Text(title),
-      trailing: const Icon(
+      title: Text(
+        title,
+        style: TextStyle(color: textColor),
+      ),
+      trailing: Icon(
         Icons.arrow_forward_ios,
         size: 16,
+        color: subtextColor,
       ),
       onTap: onTap,
     );
   }
 }
+
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() =>
-      _EditProfileScreenState();
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState
-    extends State<EditProfileScreen> {
-
-  final nameController =
-      TextEditingController();
-
-  final emailController =
-      TextEditingController();
-
-  final ageController =
-      TextEditingController();
-
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final ageController = TextEditingController();
   String gender = "Male";
-
   bool loading = true;
 
   @override
@@ -569,29 +474,18 @@ class _EditProfileScreenState
   }
 
   Future<void> loadData() async {
-
-    final uid =
-        FirebaseAuth.instance.currentUser!.uid;
-
-    final doc =
-        await FirebaseFirestore.instance
-            .collection("referrals")
-            .doc(uid)
-            .get();
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc = await FirebaseFirestore.instance
+        .collection("referrals")
+        .doc(uid)
+        .get();
 
     final data = doc.data() ?? {};
 
-    nameController.text =
-        data['name'] ?? "";
-
-    emailController.text =
-        data['email'] ?? "";
-
-    ageController.text =
-        data['age']?.toString() ?? "";
-
-    gender =
-        data['gender'] ?? "Male";
+    nameController.text = data['name'] ?? "";
+    emailController.text = data['email'] ?? "";
+    ageController.text = data['age']?.toString() ?? "";
+    gender = data['gender'] ?? "Male";
 
     setState(() {
       loading = false;
@@ -599,9 +493,7 @@ class _EditProfileScreenState
   }
 
   Future<void> saveProfile() async {
-
-    final uid =
-        FirebaseAuth.instance.currentUser!.uid;
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
     await FirebaseFirestore.instance
         .collection("referrals")
@@ -609,127 +501,133 @@ class _EditProfileScreenState
         .update({
       "name": nameController.text,
       "email": emailController.text,
-      "age":
-          int.tryParse(ageController.text) ?? 0,
+      "age": int.tryParse(ageController.text) ?? 0,
       "gender": gender,
     });
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content:
-            Text("Profile Updated"),
+        content: Text("Profile Updated"),
       ),
     );
 
     Navigator.pop(context);
   }
-Widget modernField({
-  required String label,
-  required TextEditingController controller,
-}) {
-  return Column(
-    crossAxisAlignment:
-        CrossAxisAlignment.start,
-    children: [
 
-      Text(
-        label,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+  Widget modernField({
+    required BuildContext context,
+    required String label,
+    required TextEditingController controller,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
 
-      const SizedBox(height: 8),
-
-      TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(18),
-            borderSide: BorderSide.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: textColor,
           ),
         ),
-      ),
-    ],
-  );
-}
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          style: TextStyle(color: textColor),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: cardBg,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final textColor = isDark ? Colors.white : Colors.black;
 
     if (loading) {
-      return const Scaffold(
-        body: Center(
-          child:
-              CircularProgressIndicator(),
+      return Scaffold(
+        backgroundColor: bg,
+        body: const Center(
+          child: CircularProgressIndicator(),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xffF7F8FA),
-
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor:
-            const Color(0xffF7F8FA),
+        backgroundColor: bg,
         elevation: 0,
-        title:
-            const Text("Edit Profile"),
+        iconTheme: IconThemeData(color: textColor),
+        title: Text(
+          "Edit Profile",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+        ),
       ),
-
-      body: Padding(
-        padding:
-            const EdgeInsets.all(20),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-
-            TextField(
-              controller:
-                  nameController,
-              decoration:
-                  const InputDecoration(
-                labelText: "Name",
+            modernField(
+              context: context,
+              label: "Full Name",
+              controller: nameController,
+            ),
+            const SizedBox(height: 15),
+            modernField(
+              context: context,
+              label: "Email",
+              controller: emailController,
+            ),
+            const SizedBox(height: 15),
+            modernField(
+              context: context,
+              label: "Age",
+              controller: ageController,
+            ),
+            const SizedBox(height: 15),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Gender",
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
               ),
             ),
-
-            const SizedBox(height: 15),
-
-            modernField(
-  label: "Full Name",
-  controller: nameController,
-),
-
-const SizedBox(height: 15),
-
-modernField(
-  label: "Email",
-  controller: emailController,
-),
-
-const SizedBox(height: 15),
-
-modernField(
-  label: "Age",
-  controller: ageController,
-),
-
-const SizedBox(height: 15),
-
-            DropdownButtonFormField(
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
               value: gender,
+              dropdownColor: isDark ? const Color(0xff1E1E1E) : Colors.white,
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: isDark ? const Color(0xff1E1E1E) : Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide.none,
+                ),
+              ),
               items: const [
-
                 DropdownMenuItem(
                   value: "Male",
                   child: Text("Male"),
                 ),
-
                 DropdownMenuItem(
                   value: "Female",
                   child: Text("Female"),
@@ -741,22 +639,22 @@ const SizedBox(height: 15),
                 });
               },
             ),
-
-            const Spacer(),
-
+            const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xff2F6FED),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(18),
-    ),
-  ),
-  onPressed: saveProfile,
-                child:
-                    const Text("Save"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff2F6FED),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                onPressed: saveProfile,
+                child: const Text(
+                  "Save",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -766,95 +664,86 @@ const SizedBox(height: 15),
   }
 }
 
-class NotificationSettingsScreen
-    extends StatefulWidget {
-
-  const NotificationSettingsScreen({
-    super.key,
-  });
+class NotificationSettingsScreen extends StatefulWidget {
+  const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen>
-      createState() =>
-          _NotificationSettingsScreenState();
+  State<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
 class _NotificationSettingsScreenState
-    extends State<
-        NotificationSettingsScreen> {
-
+    extends State<NotificationSettingsScreen> {
   bool medicationAlerts = true;
-
   bool moodCheckIn = true;
-
   bool journalingReminder = true;
-
   bool groupMessages = true;
-
   bool milestones = true;
-
   bool supportRequests = true;
-
   bool appUpdates = true;
 
   Widget switchTile(
-  String title,
-  bool value,
-  Function(bool) onChanged,
-) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 8,
-    ),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
-      children: [
+    BuildContext context,
+    String title,
+    bool value,
+    Function(bool) onChanged,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
 
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
           ),
-        ),
-
-        Switch(
-          value: value,
-          onChanged: onChanged,
-        ),
-      ],
-    ),
-  );
-}
+          Switch(
+            value: value,
+            activeColor: const Color(0xff2F6FED),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xffF7F8FA),
-
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor:
-            const Color(0xffF7F8FA),
+        backgroundColor: bg,
         elevation: 0,
-        title: const Text(
+        iconTheme: IconThemeData(color: textColor),
+        title: Text(
           "Notifications",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
       ),
-
       body: ListView(
-        padding:
-            const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         children: [
-
           switchTile(
+            context,
             "Medication Alerts",
             medicationAlerts,
             (v) {
@@ -863,8 +752,8 @@ class _NotificationSettingsScreenState
               });
             },
           ),
-
           switchTile(
+            context,
             "Mood Check-ins",
             moodCheckIn,
             (v) {
@@ -873,8 +762,8 @@ class _NotificationSettingsScreenState
               });
             },
           ),
-
           switchTile(
+            context,
             "Journaling Reminders",
             journalingReminder,
             (v) {
@@ -883,8 +772,8 @@ class _NotificationSettingsScreenState
               });
             },
           ),
-
           switchTile(
+            context,
             "Group Messages",
             groupMessages,
             (v) {
@@ -893,8 +782,8 @@ class _NotificationSettingsScreenState
               });
             },
           ),
-
           switchTile(
+            context,
             "Recovery Milestones",
             milestones,
             (v) {
@@ -903,8 +792,8 @@ class _NotificationSettingsScreenState
               });
             },
           ),
-
           switchTile(
+            context,
             "Support Requests",
             supportRequests,
             (v) {
@@ -913,8 +802,8 @@ class _NotificationSettingsScreenState
               });
             },
           ),
-
           switchTile(
+            context,
             "App Updates",
             appUpdates,
             (v) {
@@ -928,28 +817,43 @@ class _NotificationSettingsScreenState
     );
   }
 }
+
 class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 
   Widget tile(
+    BuildContext context,
     IconData icon,
     String title,
+    VoidCallback? onTap,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: const Color(0xff2F6FED),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20),
         ),
-        title: Text(title),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
+        child: ListTile(
+          leading: Icon(
+            icon,
+            color: isDark ? Colors.blue.shade300 : const Color(0xff2F6FED),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
+          ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: subtextColor,
+          ),
         ),
       ),
     );
@@ -957,40 +861,56 @@ class PrivacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final textColor = isDark ? Colors.white : Colors.black;
 
+    return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: const Color(0xffF7F8FA),
+        backgroundColor: bg,
         elevation: 0,
-        title: const Text(
+        iconTheme: IconThemeData(color: textColor),
+        title: Text(
           "Privacy & Security",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-
             tile(
+              context,
               Icons.lock_outline,
               "Change Password",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
+              },
             ),
-
             tile(
+              context,
               Icons.privacy_tip_outlined,
               "Privacy Policy",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+              },
             ),
-
             tile(
+              context,
               Icons.description_outlined,
               "Terms & Conditions",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsConditionsScreen()));
+              },
             ),
-
             tile(
+              context,
               Icons.security,
               "Security Settings",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SecuritySettingsScreen()));
+              },
             ),
           ],
         ),
@@ -1003,146 +923,151 @@ class SupportScreen extends StatelessWidget {
   const SupportScreen({super.key});
 
   Widget supportCard(
+    BuildContext context,
     IconData icon,
     String title,
     String subtitle,
+    VoidCallback? onTap,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
-          CircleAvatar(
-            backgroundColor:
-                const Color(0xffEEF4FF),
-            child: Icon(
-              icon,
-              color:
-                  const Color(0xff2F6FED),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: isDark ? const Color(0xff1A2A4A) : const Color(0xffEEF4FF),
+              child: Icon(
+                icon,
+                color: isDark ? Colors.blue.shade300 : const Color(0xff2F6FED),
+              ),
             ),
-          ),
-
-          const SizedBox(width: 15),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
-                    fontSize: 16,
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: textColor,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 5),
-
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.grey,
+                  const SizedBox(height: 5),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: subtextColor,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xffF7F8FA),
-
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor:
-            const Color(0xffF7F8FA),
+        backgroundColor: bg,
         elevation: 0,
-        title:
-            const Text("Support"),
+        iconTheme: IconThemeData(color: textColor),
+        title: Text(
+          "Support",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+        ),
       ),
-
       body: Padding(
-        padding:
-            const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-
             supportCard(
+              context,
               Icons.help_outline,
               "Help Center",
               "Find answers to common questions",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpCenterScreen()));
+              },
             ),
-
             supportCard(
+              context,
               Icons.support_agent,
               "Contact Support",
               "Get help from our team",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactSupportScreen(title: "Contact Support")));
+              },
             ),
-
             supportCard(
+              context,
               Icons.local_hospital,
               "Contact Doctor",
               "Reach your assigned doctor",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactSupportScreen(title: "Contact Doctor")));
+              },
             ),
-
             supportCard(
+              context,
               Icons.bug_report_outlined,
               "Report a Problem",
               "Send feedback or report bugs",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactSupportScreen(title: "Report a Problem")));
+              },
             ),
-
             const SizedBox(height: 30),
-
             Container(
-              padding:
-                  const EdgeInsets.all(20),
-              decoration:
-                  BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    BorderRadius.circular(
-                        25),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(25),
               ),
-              child: const Column(
+              child: Column(
                 children: [
-
-                  Icon(
+                  const Icon(
                     Icons.favorite,
                     color: Colors.red,
                     size: 35,
                   ),
-
-                  SizedBox(height: 12),
-
+                  const SizedBox(height: 12),
                   Text(
                     "AI Recovery",
                     style: TextStyle(
                       fontSize: 20,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
-
-                  SizedBox(height: 8),
-
+                  const SizedBox(height: 8),
                   Text(
                     "Version 2.4.0",
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: subtextColor,
                     ),
                   ),
                 ],

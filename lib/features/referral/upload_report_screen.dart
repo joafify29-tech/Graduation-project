@@ -31,6 +31,7 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
   String category = "Select Category";
 
   final List<String> categories = [
+    "Select Category",
     "Lab Report",
     "Psych Evaluation",
     "Medical History"
@@ -86,10 +87,16 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
 
   // ✅ Success Dialog
   void showSuccessDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     showDialog(
       context: context,
       builder: (_) {
         return Dialog(
+          backgroundColor: dialogBg,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(25)),
           child: Padding(
@@ -99,20 +106,30 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
               children: [
                 CircleAvatar(
                   radius: 35,
-                  backgroundColor: Colors.green.shade100,
+                  backgroundColor: isDark ? const Color(0x1a34a853) : Colors.green.shade100,
                   child: const Icon(Icons.check,
                       color: Colors.green, size: 30),
                 ),
                 const SizedBox(height: 20),
-                const Text("Upload Successful",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  "Upload Successful",
+                  style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+                ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   "Report uploaded successfully.",
                   textAlign: TextAlign.center,
+                  style: TextStyle(color: subtextColor),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xff2F6FED),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                     Navigator.pop(context);
@@ -129,12 +146,22 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF3F4F6);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.grey.shade200;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : const Color(0xff64748B);
+
     return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text("Upload Medical Report"),
+        title: Text(
+          "Upload Medical Report",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
 
       body: Padding(
@@ -146,21 +173,34 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(child: Icon(Icons.person)),
+                  CircleAvatar(
+                    backgroundColor: isDark ? const Color(0xff2A2A2A) : const Color(0xffEDEFF2),
+                    child: Icon(Icons.person, color: isDark ? Colors.white54 : Colors.black54),
+                  ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.patientName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold)),
-                      Text("Ref ID: ${widget.patientId}"),
-                      Text("Addiction: ${widget.addiction}"),
+                      Text(
+                        widget.patientName,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                        ),
+                      ),
+                      Text(
+                        "Ref ID: ${widget.patientId}",
+                        style: TextStyle(color: subtextColor),
+                      ),
+                      Text(
+                        "Addiction: ${widget.addiction}",
+                        style: TextStyle(color: subtextColor),
+                      ),
                     ],
                   )
                 ],
@@ -183,18 +223,21 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
                   child: selectedFile == null
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.cloud_upload),
-                            SizedBox(height: 10),
-                            Text("Select File"),
+                          children: [
+                            Icon(Icons.cloud_upload, color: textColor),
+                            const SizedBox(height: 10),
+                            Text("Select File", style: TextStyle(color: textColor)),
                           ],
                         )
                       : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(selectedFile!.name),
+                            Text(selectedFile!.name, style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
                             const SizedBox(height: 10),
-                            LinearProgressIndicator(value: uploadProgress),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: LinearProgressIndicator(value: uploadProgress),
+                            ),
                           ],
                         ),
                 ),
@@ -206,21 +249,45 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
             // Title
             TextField(
               controller: titleController,
-              decoration:
-                  const InputDecoration(labelText: "Report Title"),
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                labelText: "Report Title",
+                labelStyle: TextStyle(color: subtextColor),
+                filled: true,
+                fillColor: isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              ),
             ),
 
             const SizedBox(height: 15),
 
             // Category
-            DropdownButton<String>(
-              value: category,
-              isExpanded: true,
-              items: categories
-                  .map((e) =>
-                      DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              onChanged: (v) => setState(() => category = v!),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: category,
+                  dropdownColor: isDark ? const Color(0xff1E1E1E) : Colors.white,
+                  style: TextStyle(color: textColor, fontSize: 16),
+                  icon: Icon(Icons.arrow_drop_down, color: subtextColor),
+                  isExpanded: true,
+                  items: categories
+                      .map((e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e, style: TextStyle(color: textColor)),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setState(() => category = v!),
+                ),
+              ),
             ),
 
             const SizedBox(height: 15),
@@ -229,19 +296,43 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
             TextField(
               controller: notesController,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: "Notes"),
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                labelText: "Notes",
+                labelStyle: TextStyle(color: subtextColor),
+                filled: true,
+                fillColor: isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              ),
             ),
 
             const SizedBox(height: 30),
 
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff2F6FED),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                minimumSize: const Size(double.infinity, 50),
+              ),
               onPressed: uploadFile,
               child: const Text("Upload Report"),
             ),
 
+            const SizedBox(height: 10),
+
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text(
+                "Cancel",
+                style: TextStyle(color: subtextColor, fontWeight: FontWeight.w600),
+              ),
             )
           ],
         ),

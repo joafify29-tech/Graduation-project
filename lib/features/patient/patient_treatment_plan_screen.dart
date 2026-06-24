@@ -10,21 +10,26 @@ class PatientTreatmentPlanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser!.uid;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+      backgroundColor: bg,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: bg,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(
-          color: Colors.black,
+        iconTheme: IconThemeData(
+          color: textColor,
         ),
-        title: const Text(
+        title: Text(
           "Treatment Plan",
           style: TextStyle(
-            color: Colors.black,
+            color: textColor,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -48,9 +53,10 @@ class PatientTreatmentPlanScreen extends StatelessWidget {
                   as Map<String, dynamic>?;
 
           if (data == null) {
-            return const Center(
+            return Center(
               child: Text(
                 "Patient data not found",
+                style: TextStyle(color: textColor),
               ),
             );
           }
@@ -70,136 +76,140 @@ class PatientTreatmentPlanScreen extends StatelessWidget {
 
                 const SizedBox(height: 25),
 
-                const Text(
+                Text(
                   "Prescribed Medications",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
                 ),
 
                 const SizedBox(height: 15),
                 StreamBuilder<QuerySnapshot>(
-  stream: FirebaseFirestore.instance
-      .collection('referrals')
-      .doc(uid)
-      .collection('medications')
-      .where(
-        'isActive',
-        isEqualTo: true,
-      )
-      .snapshots(),
-  builder: (context, medsSnapshot) {
+                  stream: FirebaseFirestore.instance
+                      .collection('referrals')
+                      .doc(uid)
+                      .collection('medications')
+                      .where(
+                        'isActive',
+                        isEqualTo: true,
+                      )
+                      .snapshots(),
+                  builder: (context, medsSnapshot) {
 
-    if (!medsSnapshot.hasData) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
+                    if (!medsSnapshot.hasData) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
 
-    final meds =
-        medsSnapshot.data!.docs;
+                    final meds =
+                        medsSnapshot.data!.docs;
 
-    if (meds.isEmpty) {
-      return const Text(
-        "No medications assigned",
-      );
-    }
+                    if (meds.isEmpty) {
+                      return Text(
+                        "No medications assigned",
+                        style: TextStyle(color: subtextColor),
+                      );
+                    }
 
-    return Column(
-      children: meds.map((doc) {
+                    return Column(
+                      children: meds.map((doc) {
 
-        final med =
-            doc.data()
-                as Map<String, dynamic>;
+                        final med =
+                            doc.data()
+                                as Map<String, dynamic>;
 
-        return buildMedicationCard(
-  context,
-  med,
-);
+                        return buildMedicationCard(
+                          context,
+                          med,
+                        );
 
-      }).toList(),
-    );
-  },
-),
+                      }).toList(),
+                    );
+                  },
+                ),
 
-const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
-const Text(
-  "Latest Message",
-  style: TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-  ),
-),
+                Text(
+                  "Latest Message",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
 
-const SizedBox(height: 15),
+                const SizedBox(height: 15),
 
-StreamBuilder<QuerySnapshot>(
-  stream: FirebaseFirestore.instance
-      .collection('referrals')
-      .doc(uid)
-      .collection('messages')
-      .orderBy(
-        'createdAt',
-        descending: true,
-      )
-      .limit(1)
-      .snapshots(),
-  builder: (context, msgSnapshot) {
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('referrals')
+                      .doc(uid)
+                      .collection('messages')
+                      .orderBy(
+                        'createdAt',
+                        descending: true,
+                      )
+                      .limit(1)
+                      .snapshots(),
+                  builder: (context, msgSnapshot) {
 
-    if (!msgSnapshot.hasData) {
-      return const SizedBox();
-    }
+                    if (!msgSnapshot.hasData) {
+                      return const SizedBox();
+                    }
 
-    if (msgSnapshot.data!.docs.isEmpty) {
-      return buildMessageCard(
-  context,
-  "No messages yet",
-);
-    }
+                    if (msgSnapshot.data!.docs.isEmpty) {
+                      return buildMessageCard(
+                        context,
+                        "No messages yet",
+                      );
+                    }
 
-    final message =
-        msgSnapshot.data!.docs.first
-            .data()
-            as Map<String, dynamic>;
+                    final message =
+                        msgSnapshot.data!.docs.first
+                            .data()
+                            as Map<String, dynamic>;
 
-   return buildMessageCard(
-  context,
-  message['text'] ?? '',
-);
-  },
-),
+                    return buildMessageCard(
+                      context,
+                      message['text'] ?? '',
+                    );
+                  },
+                ),
 
-const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
-Container(
-  padding: const EdgeInsets.all(18),
-  decoration: BoxDecoration(
-    color: const Color(0xffFFF7E8),
-    borderRadius:
-        BorderRadius.circular(20),
-  ),
-  child: const Row(
-    children: [
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xff3A2A1A) : const Color(0xffFFF7E8),
+                    borderRadius:
+                        BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
 
-      Icon(
-        Icons.info_outline,
-        color: Colors.orange,
-      ),
+                      const Icon(
+                        Icons.info_outline,
+                        color: Colors.orange,
+                      ),
 
-      SizedBox(width: 12),
+                      const SizedBox(width: 12),
 
-      Expanded(
-        child: Text(
-          "Please follow your treatment plan and contact your doctor if you experience any issues.",
-        ),
-      ),
-    ],
-  ),
-),
+                      Expanded(
+                        child: Text(
+                          "Please follow your treatment plan and contact your doctor if you experience any issues.",
+                          style: TextStyle(color: textColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
               ],
             ),
@@ -208,6 +218,7 @@ const SizedBox(height: 30),
       ),
     );
   }
+
   Widget buildDoctorCard(
   BuildContext context,
   String doctorName,
@@ -292,6 +303,11 @@ Widget buildMedicationCard(
   BuildContext context,
   Map<String, dynamic> med,
 ) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+  final textColor = isDark ? Colors.white : Colors.black;
+  final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
   return InkWell(
     borderRadius: BorderRadius.circular(22),
     onTap: () {
@@ -308,11 +324,11 @@ Widget buildMedicationCard(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: isDark ? Colors.black26 : Colors.black12,
             blurRadius: 8,
           ),
         ],
@@ -324,7 +340,7 @@ Widget buildMedicationCard(
             width: 55,
             height: 55,
             decoration: BoxDecoration(
-              color: const Color(0xffEEF4FF),
+              color: isDark ? const Color(0xff1A2A4A) : const Color(0xffEEF4FF),
               borderRadius:
                   BorderRadius.circular(16),
             ),
@@ -344,10 +360,11 @@ Widget buildMedicationCard(
 
                 Text(
                   med['name'] ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight:
                         FontWeight.bold,
                     fontSize: 17,
+                    color: textColor,
                   ),
                 ),
 
@@ -355,8 +372,8 @@ Widget buildMedicationCard(
 
                 Text(
                   med['dosage'] ?? '',
-                  style: const TextStyle(
-                    color: Colors.grey,
+                  style: TextStyle(
+                    color: subtextColor,
                   ),
                 ),
 
@@ -389,23 +406,27 @@ Widget buildMessageCard(
   BuildContext context,
   String message,
 ) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+  final textColor = isDark ? Colors.white : Colors.black;
+
   return InkWell(
-onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) =>
-          const PatientDoctorChatScreen(),
-    ),
-  );
-},
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              const PatientDoctorChatScreen(),
+        ),
+      );
+    },
     borderRadius:
         BorderRadius.circular(20),
     child: Container(
       padding:
           const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius:
             BorderRadius.circular(20),
       ),
@@ -425,6 +446,9 @@ onTap: () {
               maxLines: 3,
               overflow:
                   TextOverflow.ellipsis,
+              style: TextStyle(
+                color: textColor,
+              ),
             ),
           ),
 

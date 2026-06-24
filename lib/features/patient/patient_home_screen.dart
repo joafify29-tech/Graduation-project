@@ -3,8 +3,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'patient_mood_screen.dart';
 import 'patient_treatment_plan_screen.dart';
-import 'patient_ai_chat_screen.dart';
+import 'patient_chat_list_screen.dart';
 import 'patient_calendar_screen.dart';
+import 'patient_main_screen.dart';
+import '../../services/time_service.dart';
+
+IconData getMoodIcon(int level) {
+  switch (level) {
+    case 1: return Icons.sentiment_very_dissatisfied;
+    case 2: return Icons.sentiment_dissatisfied;
+    case 3: return Icons.sentiment_neutral;
+    case 4: return Icons.sentiment_satisfied_alt;
+    case 5: return Icons.sentiment_very_satisfied;
+    default: return Icons.sentiment_satisfied_alt;
+  }
+}
 
 class PatientHomeScreen extends StatelessWidget {
   const PatientHomeScreen({super.key});
@@ -12,12 +25,17 @@ class PatientHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+      backgroundColor: bg,
       body: SafeArea(
         child: uid == null
-            ? const Center(child: Text("No User"))
+            ? Center(child: Text("No User", style: TextStyle(color: textColor)))
             : StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('referrals')
@@ -42,16 +60,16 @@ class PatientHomeScreen extends StatelessWidget {
 
                   final currentMoodLevel =
                       data?['currentMoodLevel'] ?? 0;
-                      final Timestamp? createdAt =
-    data?['createdAt'];
+                  final Timestamp? createdAt =
+                      data?['createdAt'];
 
-int recoveryDays = 0;
+                  int recoveryDays = 0;
 
-if (createdAt != null) {
-  recoveryDays = DateTime.now()
-      .difference(createdAt.toDate())
-      .inDays;
-}
+                  if (createdAt != null) {
+                    recoveryDays = TimeService.now()
+                        .difference(createdAt.toDate())
+                        .inDays;
+                  }
 
                   return SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
@@ -62,191 +80,140 @@ if (createdAt != null) {
 
                         Row(
                           mainAxisAlignment:
-                              MainAxisAlignment
-                                  .spaceBetween,
+                              MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     "Good morning, $name",
-                                    style:
-                                        const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 28,
-                                      fontWeight:
-                                          FontWeight
-                                              .bold,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
                                     ),
                                   ),
-                                  const SizedBox(
-                                      height: 5),
-                                  const Text(
+                                  const SizedBox(height: 5),
+                                  Text(
                                     "You're doing great today.",
                                     style: TextStyle(
-                                      color:
-                                          Colors.grey,
+                                      color: subtextColor,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(
-                              Icons
-                                  .notifications_none,
-                              color: Color(
-                                  0xff2F6FED),
+                            Icon(
+                              Icons.notifications_none,
+                              color: isDark ? Colors.white70 : const Color(0xff2F6FED),
                             ),
                           ],
                         ),
 
-                        const SizedBox(
-                            height: 20),
+                        const SizedBox(height: 20),
 
                         // Recovery Card
                         Container(
-                          padding:
-                              const EdgeInsets
-                                  .all(18),
-                          decoration:
-                              BoxDecoration(
-                            color: const Color(
-                                0xffDFF3E7),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                                        20),
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xff1B3B2B) : const Color(0xffDFF3E7),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                backgroundColor:
-                                    Color(
-                                        0xff34C759),
+                              const CircleAvatar(
+                                backgroundColor: Color(0xff34C759),
                                 child: Icon(
-                                  Icons
-                                      .location_on,
-                                  color: Colors
-                                      .white,
+                                  Icons.location_on,
+                                  color: Colors.white,
                                 ),
                               ),
-                              SizedBox(
-                                  width: 12),
-                              Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
-                                children: [
-                                  Text(
-  "$recoveryDays Days in Recovery",
-  style: const TextStyle(
-    fontWeight: FontWeight.bold,
-  ),
-),
-                                  Text(
-                                    "Keep going, one day at a time.",
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          12,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "$recoveryDays Days in Recovery",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    Text(
+                                      "Keep going, one day at a time.",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? Colors.white70 : Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               )
                             ],
                           ),
                         ),
 
-                        const SizedBox(
-                            height: 20),
+                        const SizedBox(height: 20),
 
                         // Mood Card
                         Container(
-                          padding:
-                              const EdgeInsets
-                                  .all(18),
-                          decoration:
-                              BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                                        20),
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: [
-                              const CircleAvatar(
+                              CircleAvatar(
                                 radius: 25,
-                                backgroundColor:
-                                    Color(
-                                        0xffE8F0FE),
+                                backgroundColor: isDark ? const Color(0xff1A2A4A) : const Color(0xffE8F0FE),
                                 child: Icon(
-                                  Icons
-                                      .sentiment_satisfied_alt,
-                                  color: Color(
-                                      0xff2F6FED),
+                                  getMoodIcon(currentMoodLevel),
+                                  color: const Color(0xff2F6FED),
                                 ),
                               ),
-                              const SizedBox(
-                                  width: 12),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment:
-                                      CrossAxisAlignment
-                                          .start,
+                                      CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       "Current Mood",
-                                      style:
-                                          TextStyle(
-                                        color: Colors
-                                            .grey,
+                                      style: TextStyle(
+                                        color: subtextColor,
                                       ),
                                     ),
-                                    const SizedBox(
-                                        height:
-                                            5),
+                                    const SizedBox(height: 5),
                                     Text(
                                       currentMood,
-                                      style:
-                                          const TextStyle(
-                                        fontSize:
-                                            18,
-                                        fontWeight:
-                                            FontWeight
-                                                .bold,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: textColor,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                               Container(
-                                padding:
-                                    const EdgeInsets
-                                        .symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 6,
                                 ),
-                                decoration:
-                                    BoxDecoration(
-                                  color: const Color(
-                                      0xffEEF4FF),
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                              20),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xff1A2A4A) : const Color(0xffEEF4FF),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   "$currentMoodLevel/5",
-                                  style:
-                                      const TextStyle(
-                                    color: Color(
-                                        0xff2F6FED),
-                                    fontWeight:
-                                        FontWeight
-                                            .bold,
+                                  style: const TextStyle(
+                                    color: Color(0xff2F6FED),
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -254,239 +221,234 @@ if (createdAt != null) {
                           ),
                         ),
 
-                        const SizedBox(
-                            height: 20),
+                        const SizedBox(height: 20),
 
                         // Progress Card
-                        // Progress Card
-Container(
-  padding: const EdgeInsets.all(18),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(20),
-  ),
-  child: Row(
-    mainAxisAlignment:
-        MainAxisAlignment.spaceBetween,
-    children: [
-      const Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Text(
-            "TODAY'S PROGRESS",
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey,
-            ),
-          ),
-          SizedBox(height: 5),
-          Text(
-            "2 of 4 Tasks Done",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-      SizedBox(
-        width: 60,
-        height: 60,
-        child: CircularProgressIndicator(
-          value: .45,
-          strokeWidth: 6,
-          color: Color(0xff2F6FED),
-        ),
-      ),
-    ],
-  ),
-),
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "TODAY'S PROGRESS",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: subtextColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "2 of 4 Tasks Done",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(
+                                width: 60,
+                                height: 60,
+                                child: CircularProgressIndicator(
+                                  value: .45,
+                                  strokeWidth: 6,
+                                  color: Color(0xff2F6FED),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
 
-const SizedBox(height: 25),
+                        const SizedBox(height: 25),
 
-Row(
-  mainAxisAlignment:
-      MainAxisAlignment.spaceBetween,
-  children: [
+                        Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Today's Reminders",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                PatientMainScreen.of(context)?.changeTab(3);
+                              },
+                              child: const Text(
+                                "See All",
+                                style: TextStyle(
+                                  color: Color(0xff2F6FED),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
 
-    const Text(
-      "Today's Reminders",
-      style: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
+                        const SizedBox(height: 15),
 
-    GestureDetector(
-      onTap: () {
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('referrals')
+                              .doc(uid)
+                              .collection('reminders')
+                              .snapshots(),
+                          builder: (context, reminderSnapshot) {
+                            if (!reminderSnapshot.hasData) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
 
-        Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) =>
-        const PatientCalendarScreen(),
-  ),
-);
+                            final reminders =
+                                reminderSnapshot.data!.docs;
 
-      },
-      child: const Text(
-        "See All",
-        style: TextStyle(
-          color: Color(0xff2F6FED),
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
-  ],
-),
+                            if (reminders.isEmpty) {
+                              return Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: cardBg,
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.notifications_off,
+                                      color: subtextColor,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      "No reminders today",
+                                      style: TextStyle(
+                                        color: subtextColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
 
-const SizedBox(height: 15),
+                            return Column(
+                              children: reminders.take(3).map((doc) {
+                                final reminder =
+                                    doc.data() as Map<String, dynamic>;
 
-StreamBuilder<QuerySnapshot>(
-  stream: FirebaseFirestore.instance
-      .collection('referrals')
-      .doc(uid)
-      .collection('reminders')
-      .snapshots(),
-  builder: (context, reminderSnapshot) {
+                                final dates = List<String>.from(reminder['completedDates'] ?? []);
+                                final now = TimeService.now();
+                                final todayKey = "${now.year}-${now.month}-${now.day}";
+                                final isDone = dates.contains(todayKey);
 
-    if (!reminderSnapshot.hasData) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
+                                return reminderCard(
+                                  context: context,
+                                  title: reminder['title'] ?? '',
+                                  subtitle: "${reminder['time'] ?? ''} • ${reminder['frequency'] ?? ''}",
+                                  done: isDone,
+                                  onTap: () {
+                                    if (isDone) {
+                                      dates.remove(todayKey);
+                                    } else {
+                                      dates.add(todayKey);
+                                    }
+                                    FirebaseFirestore.instance
+                                        .collection('referrals')
+                                        .doc(uid)
+                                        .collection('reminders')
+                                        .doc(doc.id)
+                                        .update({'completedDates': dates});
+                                  },
+                                );
+                              }).toList(),
+                            );
+                          },
+                        ),
 
-    final reminders =
-        reminderSnapshot.data!.docs;
+                        const SizedBox(height: 25),
 
-    if (reminders.isEmpty) {
-      return Container(
-        padding:
-            const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius:
-              BorderRadius.circular(18),
-        ),
-        child: const Row(
-          children: [
+                        Text(
+                          "Resources",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
 
-            Icon(
-              Icons.notifications_off,
-              color: Colors.grey,
-            ),
+                        const SizedBox(height: 15),
 
-            SizedBox(width: 12),
-
-            Text(
-              "No reminders today",
-              style: TextStyle(
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: reminders.take(3).map((doc) {
-
-        final reminder =
-            doc.data()
-                as Map<String, dynamic>;
-
-        return reminderCard(
-          title:
-              reminder['title'] ?? '',
-          subtitle:
-              "${reminder['time'] ?? ''} • ${reminder['frequency'] ?? ''}",
-        );
-
-      }).toList(),
-    );
-  },
-),
-
-const SizedBox(height: 25),
-
-const Text(
-  "Resources",
-  style: TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-  ),
-),
-
-const SizedBox(height: 15),
-
-GridView.count(
-  shrinkWrap: true,
-  physics:
-      const NeverScrollableScrollPhysics(),
-  crossAxisCount: 2,
-  mainAxisSpacing: 12,
-  crossAxisSpacing: 12,
-  childAspectRatio: 1,
-  children: [
-
-    resourceCard(
-      context,
-      "Update Mood",
-      Icons.sentiment_satisfied_alt,
-      const Color(0xffFFE9D6),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                const PatientMoodScreen(),
-          ),
-        );
-      },
-    ),
-
-    resourceCard(
-  context,
-  "AI Chat",
-  Icons.smart_toy,
-  const Color(0xff2F6FED),
-  white: true,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const PatientAiChatScreen(),
-      ),
-    );
-  },
-),
-
-    resourceCard(
-  context,
-  "Treatment Plan",
-  Icons.description,
-  const Color(0xffE8F0FE),
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const PatientTreatmentPlanScreen(),
-      ),
-    );
-  },
-),
-    resourceCard(
-      context,
-      "My Sessions",
-      Icons.event_note,
-      const Color(0xffF3E8FF),
-    ),
-  ],
-),
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 1,
+                          children: [
+                            resourceCard(
+                              context,
+                              "Update Mood",
+                              getMoodIcon(currentMoodLevel),
+                              isDark ? const Color(0xff3A2A1A) : const Color(0xffFFE9D6),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PatientMoodScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            resourceCard(
+                              context,
+                              "AI Chat",
+                              Icons.smart_toy,
+                              const Color(0xff2F6FED),
+                              white: true,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PatientChatListScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            resourceCard(
+                              context,
+                              "Treatment Plan",
+                              Icons.description,
+                              isDark ? const Color(0xff1A2A4A) : const Color(0xffE8F0FE),
+                              iconColor: isDark ? Colors.blue.shade300 : Colors.blue,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PatientTreatmentPlanScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            resourceCard(
+                              context,
+                              "My Sessions",
+                              Icons.event_note,
+                              isDark ? const Color(0xff2A1A3A) : const Color(0xffF3E8FF),
+                              iconColor: isDark ? Colors.purple.shade300 : Colors.purple,
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   );
@@ -497,51 +459,74 @@ GridView.count(
   }
 
   Widget reminderCard({
+    required BuildContext context,
     required String title,
     required String subtitle,
     bool done = false,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            done
-                ? Icons.check_box
-                : Icons.check_box_outline_blank,
-            color: done ? Colors.blue : Colors.grey,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    decoration:
-                        done ? TextDecoration.lineThrough : null,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              done ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: done ? Colors.green : (isDark ? Colors.grey[600] : Colors.grey),
             ),
-          ),
-          const Icon(Icons.notifications_none),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: subtextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: done 
+                    ? (isDark ? const Color(0xff1A3B2B) : const Color(0xffDFF3E7))
+                    : (isDark ? const Color(0xff3A2A1A) : const Color(0xffFFF2E5)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                done ? "DONE" : "PENDING",
+                style: TextStyle(
+                  color: done ? Colors.green : Colors.orange, 
+                  fontSize: 10, 
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -553,38 +538,36 @@ GridView.count(
     Color color, {
     bool white = false,
     VoidCallback? onTap,
+    Color? iconColor,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: color,
-          borderRadius:
-              BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(22),
         ),
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircleAvatar(
-              backgroundColor:
-                  Colors.white24,
+              backgroundColor: Colors.white24,
               child: Icon(
                 icon,
                 color: white
                     ? Colors.white
-                    : Colors.orange,
+                    : (iconColor ?? (isDark ? Colors.orange.shade300 : Colors.orange)),
               ),
             ),
             const SizedBox(height: 12),
             Text(
               title,
               style: TextStyle(
-                color: white
-                    ? Colors.white
-                    : Colors.black,
-                fontWeight:
-                    FontWeight.w600,
+                color: white ? Colors.white : textColor,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

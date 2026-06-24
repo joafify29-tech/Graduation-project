@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'patient_select_screen.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -14,12 +15,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+      backgroundColor: bg,
 
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xff2F6FED),
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const PatientSelectScreen(mode: 'reminder'),
+            ),
+          );
+        },
         child: const Icon(Icons.add),
       ),
 
@@ -98,16 +111,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 // 🔝 HEADER
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text("Patient Reminders",
                         style: TextStyle(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold)),
+                            fontWeight: FontWeight.bold,
+                            color: textColor)),
                     Row(
                       children: [
-                        Icon(Icons.language),
-                        SizedBox(width: 10),
-                        Icon(Icons.dark_mode),
+                        Icon(Icons.language, color: isDark ? Colors.white70 : Colors.black),
                       ],
                     )
                   ],
@@ -119,7 +131,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: TextField(
@@ -128,11 +140,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         search = val;
                       });
                     },
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.search),
+                    decoration: InputDecoration(
+                      icon: Icon(Icons.search, color: isDark ? Colors.white54 : Colors.grey),
                       hintText: "Search patients or reminders...",
+                      hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
                       border: InputBorder.none,
                     ),
+                    style: TextStyle(color: textColor),
                   ),
                 ),
 
@@ -190,13 +204,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         padding:
             const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? const Color(0xff2F6FED) : Colors.white,
+          color: active ? const Color(0xff2F6FED) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xff1E1E1E) : Colors.white),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           text,
           style: TextStyle(
-            color: active ? Colors.white : Colors.black,
+            color: active ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           ),
         ),
       ),
@@ -223,7 +237,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xff1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
@@ -232,8 +246,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
           CircleAvatar(
             backgroundColor: high
-                ? Colors.red.shade100
-                : const Color(0xffE8F0FE),
+                ? (Theme.of(context).brightness == Brightness.dark ? Colors.red.withValues(alpha: 0.2) : Colors.red.shade100)
+                : (Theme.of(context).brightness == Brightness.dark ? const Color(0xff2F6FED).withValues(alpha: 0.2) : const Color(0xffE8F0FE)),
             child: Icon(icon,
                 color: high ? Colors.red : const Color(0xff2F6FED)),
           ),
@@ -246,8 +260,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               children: [
 
                 Text(name,
-                    style:
-                        const TextStyle(fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)),
 
                 Text(title,
                     style: const TextStyle(color: Colors.grey)),
@@ -270,7 +285,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
           Text(
             time,
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
           )
         ],
       ),
@@ -278,16 +296,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Widget tag(String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xffE8F0FE),
+        color: isDark ? const Color(0xff2A2A2A) : const Color(0xffE8F0FE),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 10),
+        style: TextStyle(
+          fontSize: 10,
+          color: isDark ? Colors.white70 : Colors.black87,
+        ),
       ),
     );
   }

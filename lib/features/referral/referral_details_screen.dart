@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'edit_patient_screen.dart';
+import 'upload_report_screen.dart';
 
 class ReferralDetailsScreen extends StatelessWidget {
   final dynamic data;
@@ -21,20 +22,29 @@ class ReferralDetailsScreen extends StatelessWidget {
     String status = data['status'] ?? "ACTIVE";
     String notes = data['notes'] ?? "";
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : const Color(0xffF0F2F5);
+    final statusContainerBg = isDark ? const Color(0xff2A2A2A) : const Color(0xffEDEFF2);
+
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+      backgroundColor: bg,
 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: const Icon(Icons.arrow_back, color: Colors.black),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: textColor),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Column(
           children: [
             Text(
               name,
-              style: const TextStyle(
-                color: Colors.black,
+              style: TextStyle(
+                color: textColor,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -44,16 +54,16 @@ class ReferralDetailsScreen extends StatelessWidget {
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
                 color: status == "ACTIVE"
-                    ? const Color(0xffE6F4EA)
-                    : const Color(0xffFFF4E5),
+                    ? (isDark ? const Color(0x1f34a853) : const Color(0xffE6F4EA))
+                    : (isDark ? const Color(0x1fF59E0B) : const Color(0xffFFF4E5)),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 status,
                 style: TextStyle(
                   color: status == "ACTIVE"
-                      ? const Color(0xff34A853)
-                      : const Color(0xffF59E0B),
+                      ? (isDark ? const Color(0xff81c784) : const Color(0xff34A853))
+                      : (isDark ? const Color(0xffFFB74D) : const Color(0xffF59E0B)),
                   fontSize: 11,
                 ),
               ),
@@ -62,7 +72,7 @@ class ReferralDetailsScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
+            icon: Icon(Icons.more_vert, color: textColor),
             onPressed: () {},
           )
         ],
@@ -78,7 +88,7 @@ class ReferralDetailsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: const Color(0xffF0F2F5),
+                color: cardBg,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -86,22 +96,22 @@ class ReferralDetailsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      infoItem("AGE", age),
-                      infoItem("GENDER", gender),
+                      infoItem(context, "AGE", age),
+                      infoItem(context, "GENDER", gender),
                     ],
                   ),
                   const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      infoItem("ADDICTION", type),
-                      infoItem("DATE ADMITTED", "12/10/2023"),
+                      infoItem(context, "ADDICTION", type),
+                      infoItem(context, "DATE ADMITTED", "12/10/2023"),
                     ],
                   ),
                   const SizedBox(height: 15),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: infoItem("REF ID", "#AR-9021",
+                    child: infoItem(context, "REF ID", "#AR-9021",
                         isBlue: true),
                   )
                 ],
@@ -110,19 +120,20 @@ class ReferralDetailsScreen extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            sectionTitle("INITIAL CLINICAL NOTES"),
+            sectionTitle(context, "INITIAL CLINICAL NOTES"),
 
             const SizedBox(height: 10),
 
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: const Color(0xffF0F2F5),
+                color: cardBg,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 notes.isEmpty ? "No notes available" : notes,
-                style: const TextStyle(height: 1.5),
+                style: TextStyle(height: 1.5, color: textColor),
               ),
             ),
 
@@ -131,12 +142,27 @@ class ReferralDetailsScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                sectionTitle("MEDICAL REPORTS"),
-                const Text(
-                  "+ Upload Report",
-                  style: TextStyle(
-                    color: Color(0xff2F6FED),
-                    fontWeight: FontWeight.w500,
+                sectionTitle(context, "MEDICAL REPORTS"),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => UploadReportScreen(
+                          patientName: name,
+                          patientId: data['patientId'] ?? docId,
+                          addiction: type,
+                          docId: docId,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "+ Upload Report",
+                    style: TextStyle(
+                      color: Color(0xff2F6FED),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 )
               ],
@@ -144,27 +170,27 @@ class ReferralDetailsScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            reportItem("Blood_Work_Analysis_v2.pdf", "2.4 MB"),
+            reportItem(context, "Blood_Work_Analysis_v2.pdf", "2.4 MB"),
             const SizedBox(height: 10),
-            reportItem("Psych_Eval_initial.pdf", "1.8 MB"),
+            reportItem(context, "Psych_Eval_initial.pdf", "1.8 MB"),
 
             const SizedBox(height: 25),
 
-            sectionTitle("CURRENT STATUS"),
+            sectionTitle(context, "CURRENT STATUS"),
 
             const SizedBox(height: 10),
 
             Container(
               padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
-                color: const Color(0xffEDEFF2),
+                color: statusContainerBg,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Row(
                 children: [
-                  statusButton("Active", status == "ACTIVE"),
-                  statusButton("Discharged", status == "DISCHARGED"),
-                  statusButton("Pending", status == "PENDING"),
+                  statusButton(context, "Active", status == "ACTIVE"),
+                  statusButton(context, "Discharged", status == "DISCHARGED"),
+                  statusButton(context, "Pending", status == "PENDING"),
                 ],
               ),
             ),
@@ -178,6 +204,7 @@ class ReferralDetailsScreen extends StatelessWidget {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff2F6FED),
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -197,7 +224,6 @@ class ReferralDetailsScreen extends StatelessWidget {
                     child: const Text(
                       "Edit Patient",
                       style: TextStyle(
-                        color: Colors.white, // 🔥 FIX
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -226,58 +252,77 @@ class ReferralDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget sectionTitle(String text) {
+  Widget sectionTitle(BuildContext context, String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontWeight: FontWeight.w600,
         fontSize: 13,
-        color: Colors.grey,
+        color: subtextColor,
       ),
     );
   }
 
-  Widget infoItem(String title, String value, {bool isBlue = false}) {
+  Widget infoItem(BuildContext context, String title, String value, {bool isBlue = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+        Text(title, style: TextStyle(color: subtextColor, fontSize: 11)),
         const SizedBox(height: 5),
         Text(
           value,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: isBlue ? const Color(0xff2F6FED) : Colors.black,
+            color: isBlue ? const Color(0xff2F6FED) : textColor,
           ),
         ),
       ],
     );
   }
 
-  Widget reportItem(String name, String size) {
+  Widget reportItem(BuildContext context, String name, String size) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : const Color(0xffF0F2F5);
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xffF0F2F5),
+        color: cardBg,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
         children: [
           const Icon(Icons.picture_as_pdf, color: Colors.red),
           const SizedBox(width: 10),
-          Expanded(child: Text(name)),
+          Expanded(
+            child: Text(
+              name,
+              style: TextStyle(color: textColor),
+            ),
+          ),
           const Icon(Icons.download, color: Colors.blue),
         ],
       ),
     );
   }
 
-  Widget statusButton(String text, bool selected) {
+  Widget statusButton(BuildContext context, String text, bool selected) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedBg = isDark ? const Color(0xff3A3A3A) : Colors.white;
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
+          color: selected ? selectedBg : Colors.transparent,
           borderRadius: BorderRadius.circular(25),
         ),
         alignment: Alignment.center,
@@ -293,30 +338,46 @@ class ReferralDetailsScreen extends StatelessWidget {
   }
 
   void showDeleteDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     showDialog(
       context: context,
       builder: (_) {
         return AlertDialog(
+          backgroundColor: dialogBg,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-          title: const Text("Delete Patient?"),
-          content: const Text("This action cannot be undone."),
+          title: Text(
+            "Delete Patient?",
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            "This action cannot be undone.",
+            style: TextStyle(color: subtextColor),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text("Cancel", style: TextStyle(color: subtextColor)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () async {
+                final nav = Navigator.of(context);
                 await FirebaseFirestore.instance
                     .collection('referrals')
                     .doc(docId)
                     .delete();
 
-                Navigator.pop(context);
-                Navigator.pop(context);
-                Navigator.pop(context);
+                nav.pop();
+                nav.pop();
+                nav.pop();
               },
               child: const Text("Delete"),
             )

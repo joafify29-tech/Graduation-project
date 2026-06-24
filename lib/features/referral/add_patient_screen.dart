@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
 import 'patient_created_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import '../../core/auth_credentials.dart';
 
 class AddPatientScreen extends StatefulWidget {
   const AddPatientScreen({super.key});
@@ -19,6 +20,9 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
 
   String selectedGender = "Male";
   String? addictionType;
+  List<Map<String, dynamic>> _doctors = [];
+  String? selectedDoctorId;
+  String? selectedDoctorName;
 
   final List<String> addictions = [
     "Hashish",
@@ -27,6 +31,29 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
     "Ice",
     "Cocaine",
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDoctors();
+  }
+
+  Future<void> _fetchDoctors() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'doctor')
+          .get();
+      setState(() {
+        _doctors = snapshot.docs.map((doc) => {
+          'id': doc.id,
+          'name': doc.data()['name'] ?? 'Unknown Doctor',
+        }).toList();
+      });
+    } catch (e) {
+      showError("Error fetching doctors: $e");
+    }
+  }
 
   String generatePassword() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -61,8 +88,8 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
     String age = ageController.text.trim();
     String notes = notesController.text.trim();
 
-    if (name.isEmpty || age.isEmpty || addictionType == null) {
-      showError("Please fill all required fields");
+    if (name.isEmpty || age.isEmpty || addictionType == null || selectedDoctorId == null) {
+      showError("Please fill all required fields, including assigning a doctor");
       return;
     }
 
@@ -101,6 +128,8 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         "email": email,
         "tempPassword": password,
         "role": "patient",
+        "doctorId": selectedDoctorId,
+        "doctorName": selectedDoctorName,
         "createdAt": Timestamp.now(),
       });
 
@@ -111,11 +140,21 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         "name": name,
         "email": email,
         "role": "patient",
+        "doctorId": selectedDoctorId,
+        "doctorName": selectedDoctorName,
         "createdAt": Timestamp.now(),
       });
 
       await secondaryAuth.signOut();
       await secondaryApp.delete();
+
+      // Restore referral user session to default FirebaseAuth instance
+      if (AuthCredentials.email != null && AuthCredentials.password != null) {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: AuthCredentials.email!,
+          password: AuthCredentials.password!,
+        );
+      }
 
       if (!mounted) return;
 
@@ -140,15 +179,22 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         .showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Widget buildField(String hint, TextEditingController controller,
+  Widget buildField(BuildContext context, String hint, TextEditingController controller,
       {int maxLines = 1}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inputBg = isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5);
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : const Color(0xff64748B);
+
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: TextStyle(color: subtextColor),
         filled: true,
-        fillColor: const Color(0xffF0F2F5),
+        fillColor: inputBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,
@@ -161,8 +207,16 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : const Color(0xff64748B);
+    final inputBg = isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5);
+    final containerBg = isDark ? const Color(0xff222222) : const Color(0xffEDEFF2);
+
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+      backgroundColor: bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -173,12 +227,15 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.arrow_back),
+                  IconButton(
+                    icon: Icon(Icons.arrow_back, color: textColor),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                   Row(
-                    children: const [
-                      Icon(Icons.language, size: 18),
-                      SizedBox(width: 5),
-                      Text("AR"),
+                    children: [
+                      Icon(Icons.language, size: 18, color: textColor),
+                      const SizedBox(width: 5),
+                      Text("AR", style: TextStyle(color: textColor)),
                     ],
                   )
                 ],
@@ -187,73 +244,76 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
               const SizedBox(height: 20),
 
               Column(
-                children: const [
+                children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Color(0xffE3EDFF),
-                    child: Icon(Icons.health_and_safety,
+                    backgroundColor: isDark ? const Color(0xff1A2A4A) : const Color(0xffE3EDFF),
+                    child: const Icon(Icons.health_and_safety,
                         color: Color(0xff2F6FED)),
                   ),
-                  SizedBox(height: 10),
-                  Text("AI RECOVERY",
+                  const SizedBox(height: 10),
+                  const Text("AI RECOVERY",
                       style: TextStyle(color: Color(0xff2F6FED))),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     "Add New Patient",
                     style:
-                        TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     "Enter patient details to begin recovery tracking",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: subtextColor),
                   ),
                 ],
               ),
 
               const SizedBox(height: 25),
 
-              const Text("Full Name"),
+              Text("Full Name", style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
-              buildField("e.g. Jonathan Doe", nameController),
+              buildField(context, "e.g. Jonathan Doe", nameController),
 
               const SizedBox(height: 15),
 
-              const Text("Age"),
+              Text("Age", style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
-              buildField("Enter patient age", ageController),
+              buildField(context, "Enter patient age", ageController),
 
               const SizedBox(height: 15),
 
-              const Text("Gender"),
+              Text("Gender", style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
 
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xffEDEFF2),
+                  color: containerBg,
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: Row(
                   children: [
-                    genderButton("Male"),
-                    genderButton("Female"),
+                    genderButton(context, "Male"),
+                    genderButton(context, "Female"),
                   ],
                 ),
               ),
 
               const SizedBox(height: 15),
 
-              const Text("Addiction Type"),
+              Text("Addiction Type", style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
 
               DropdownButtonFormField<String>(
                 value: addictionType,
+                dropdownColor: cardBg,
+                style: TextStyle(color: textColor),
                 decoration: InputDecoration(
                   hintText: "Select addiction type",
+                  hintStyle: TextStyle(color: subtextColor),
                   filled: true,
-                  fillColor: const Color(0xffF0F2F5),
+                  fillColor: inputBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
                     borderSide: BorderSide.none,
@@ -261,17 +321,51 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                 ),
                 items: addictions
                     .map((e) =>
-                        DropdownMenuItem(value: e, child: Text(e)))
+                        DropdownMenuItem(value: e, child: Text(e, style: TextStyle(color: textColor))))
                     .toList(),
                 onChanged: (val) => setState(() => addictionType = val),
               ),
 
               const SizedBox(height: 15),
 
-              const Text("Initial Notes (Optional)"),
+              Text("Assign Doctor", style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 5),
+
+              DropdownButtonFormField<String>(
+                value: selectedDoctorId,
+                dropdownColor: cardBg,
+                style: TextStyle(color: textColor),
+                decoration: InputDecoration(
+                  hintText: _doctors.isEmpty ? "No doctors available" : "Select doctor",
+                  hintStyle: TextStyle(color: subtextColor),
+                  filled: true,
+                  fillColor: inputBg,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                items: _doctors
+                    .map((doc) => DropdownMenuItem<String>(
+                          value: doc['id'] as String,
+                          child: Text(doc['name'] as String, style: TextStyle(color: textColor)),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  setState(() {
+                    selectedDoctorId = val;
+                    selectedDoctorName = _doctors.firstWhere((doc) => doc['id'] == val)['name'];
+                  });
+                },
+              ),
+
+              const SizedBox(height: 15),
+
+              Text("Initial Notes (Optional)", style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
 
               buildField(
+                context,
                 "Enter any preliminary observations or medical history...",
                 notesController,
                 maxLines: 4,
@@ -307,8 +401,10 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
     );
   }
 
-  Widget genderButton(String gender) {
+  Widget genderButton(BuildContext context, String gender) {
     final isSelected = selectedGender == gender;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
 
     return Expanded(
       child: GestureDetector(
@@ -316,14 +412,14 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? cardBg : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
           ),
           alignment: Alignment.center,
           child: Text(
             gender,
             style: TextStyle(
-              color: isSelected ? const Color(0xff2F6FED) : Colors.grey,
+              color: isSelected ? const Color(0xff2F6FED) : (isDark ? Colors.grey[400]! : Colors.grey),
               fontWeight: FontWeight.w500,
             ),
           ),

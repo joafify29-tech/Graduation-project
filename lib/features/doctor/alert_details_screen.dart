@@ -54,7 +54,7 @@ class AlertDetailsScreen extends StatelessWidget {
                   child: const Text(
                     "HIGH RISK",
                     style: TextStyle(
-                        color: Color(0xffEF4444), fontSize: 11),
+                        color: const Color(0xffEF4444), fontSize: 11),
                   ),
                 ),
 
@@ -219,7 +219,7 @@ class AlertDetailsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(

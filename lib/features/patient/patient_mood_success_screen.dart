@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/time_service.dart';
 
 class PatientMoodSuccessScreen extends StatelessWidget {
   const PatientMoodSuccessScreen({super.key});
@@ -21,7 +22,7 @@ class PatientMoodSuccessScreen extends StatelessWidget {
     final startDate =
         createdAt.toDate();
 
-    final days = DateTime.now()
+    final days = TimeService.now()
         .difference(startDate)
         .inDays;
 
@@ -30,9 +31,14 @@ class PatientMoodSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return Scaffold(
-      backgroundColor:
-          const Color(0xffF7F8FA),
+      backgroundColor: bg,
 
       body: SafeArea(
         child: FutureBuilder<int>(
@@ -61,8 +67,9 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                           Navigator.pop(
                               context);
                         },
-                        icon: const Icon(
-                            Icons.close),
+                        icon: Icon(
+                            Icons.close,
+                            color: textColor),
                       ),
                     ],
                   ),
@@ -75,8 +82,7 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                     height: 100,
                     decoration:
                         BoxDecoration(
-                      color: const Color(
-                          0xffE8F0FF),
+                      color: isDark ? const Color(0xff1A2A4A) : const Color(0xffE8F0FF),
                       borderRadius:
                           BorderRadius
                               .circular(
@@ -93,7 +99,7 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                   const SizedBox(
                       height: 25),
 
-                  const Text(
+                  Text(
                     "Update\nSubmitted!",
                     textAlign:
                         TextAlign.center,
@@ -101,18 +107,19 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                       fontSize: 32,
                       fontWeight:
                           FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
 
                   const SizedBox(
                       height: 10),
 
-                  const Text(
+                  Text(
                     "Your progress has been recorded.\nEvery check-in is a step forward in your recovery journey.",
                     textAlign:
                         TextAlign.center,
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: subtextColor,
                     ),
                   ),
 
@@ -125,17 +132,16 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                             .all(22),
                     decoration:
                         BoxDecoration(
-                      color: Colors.white,
+                      color: cardBg,
                       borderRadius:
                           BorderRadius
                               .circular(
                                   22),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors
-                              .grey
-                              .withOpacity(
-                                  .08),
+                          color: isDark 
+                              ? Colors.black26 
+                              : Colors.grey.withValues(alpha: 0.08),
                           blurRadius: 15,
                         ),
                       ],
@@ -143,7 +149,7 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                     child: Column(
                       children: [
 
-                        const Text(
+                        Text(
                           "CONSISTENCY IS KEY",
                           style:
                               TextStyle(
@@ -151,6 +157,7 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                             fontWeight:
                                 FontWeight
                                     .bold,
+                            color: textColor,
                           ),
                         ),
 
@@ -173,14 +180,13 @@ class PatientMoodSuccessScreen extends StatelessWidget {
                         const SizedBox(
                             height: 10),
 
-                        const Text(
+                        Text(
                           "You're doing better than 85% of users this week.",
                           textAlign:
                               TextAlign.center,
                           style:
                               TextStyle(
-                            color:
-                                Colors.grey,
+                            color: subtextColor,
                             fontSize:
                                 12,
                           ),

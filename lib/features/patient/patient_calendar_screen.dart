@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../../services/time_service.dart';
 
 class PatientCalendarScreen extends StatefulWidget {
   const PatientCalendarScreen({super.key});
@@ -14,7 +14,7 @@ class PatientCalendarScreen extends StatefulWidget {
 class _PatientCalendarScreenState
     extends State<PatientCalendarScreen> {
 
-  DateTime selectedDate = DateTime.now();
+  DateTime selectedDate = TimeService.now();
 
   String get selectedKey =>
       "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
@@ -23,19 +23,23 @@ class _PatientCalendarScreenState
   Widget build(BuildContext context) {
     final uid =
         FirebaseAuth.instance.currentUser?.uid;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
     if (uid == null) {
-      return const Scaffold(
+      return Scaffold(
+        backgroundColor: bg,
         body: Center(
-          child: Text("No User"),
+          child: Text("No User", style: TextStyle(color: textColor)),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xffF7F8FA),
-
+      backgroundColor: bg,
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -44,13 +48,10 @@ class _PatientCalendarScreenState
               .collection('reminders')
               .orderBy('createdAt')
               .snapshots(),
-
           builder: (context, snapshot) {
-
             if (!snapshot.hasData) {
               return const Center(
-                child:
-                    CircularProgressIndicator(),
+                child: CircularProgressIndicator(),
               );
             }
 
@@ -60,128 +61,89 @@ class _PatientCalendarScreenState
             int completed = 0;
 
             for (var doc in reminders) {
-
               final data =
-                  doc.data()
-                      as Map<String, dynamic>;
+                  doc.data() as Map<String, dynamic>;
 
               final dates =
                   List<String>.from(
-                data['completedDates'] ??
-                    [],
+                data['completedDates'] ?? [],
               );
 
-              if (dates.contains(
-                  selectedKey)) {
+              if (dates.contains(selectedKey)) {
                 completed++;
               }
             }
 
-            final total =
-                reminders.length;
-
-            final progress =
-                total == 0
-                    ? 0.0
-                    : completed / total;
+            final total = reminders.length;
+            final progress = total == 0 ? 0.0 : completed / total;
 
             return SingleChildScrollView(
-              padding:
-                  const EdgeInsets.all(20),
-
+              padding: const EdgeInsets.all(20),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  const Text(
+                  Text(
                     "Recovery Calendar",
                     style: TextStyle(
                       fontSize: 30,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
 
                   const SizedBox(height: 5),
 
-                  const Text(
+                  Text(
                     "Stay consistent every day.",
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: subtextColor,
                     ),
                   ),
 
                   const SizedBox(height: 25),
 
-                  buildWeekSelector(),
+                  buildWeekSelector(cardBg, textColor, isDark),
 
                   const SizedBox(height: 25),
 
                   Container(
-                    padding:
-                        const EdgeInsets.all(
-                            22),
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          Colors.white,
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  28),
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(28),
                     ),
-
                     child: Row(
                       children: [
-
                         Expanded(
                           child: Column(
                             crossAxisAlignment:
-                                CrossAxisAlignment
-                                    .start,
+                                CrossAxisAlignment.start,
                             children: [
-
-                              const Text(
+                              Text(
                                 "TODAY'S PROGRESS",
-                                style:
-                                    TextStyle(
-                                  color:
-                                      Colors
-                                          .grey,
+                                style: TextStyle(
+                                  color: subtextColor,
                                 ),
                               ),
 
-                              const SizedBox(
-                                  height:
-                                      8),
+                              const SizedBox(height: 8),
 
                               Text(
                                 "$completed of $total Tasks Done",
-                                style:
-                                    const TextStyle(
-                                  fontSize:
-                                      26,
-                                  fontWeight:
-                                      FontWeight
-                                          .bold,
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
                                 ),
                               ),
 
-                              const SizedBox(
-                                  height:
-                                      8),
+                              const SizedBox(height: 8),
 
                               Text(
                                 "${(progress * 100).toInt()}% Complete",
-                                style:
-                                    const TextStyle(
-                                  color: Color(
-                                      0xff34C759),
-                                  fontWeight:
-                                      FontWeight
-                                          .bold,
+                                style: const TextStyle(
+                                  color: Color(0xff34C759),
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
@@ -191,16 +153,10 @@ class _PatientCalendarScreenState
                         SizedBox(
                           width: 90,
                           height: 90,
-
-                          child:
-                              CircularProgressIndicator(
-                            value:
-                                progress,
-                            strokeWidth:
-                                8,
-                            color:
-                                const Color(
-                                    0xff2F6FED),
+                          child: CircularProgressIndicator(
+                            value: progress,
+                            strokeWidth: 8,
+                            color: const Color(0xff2F6FED),
                           ),
                         ),
                       ],
@@ -209,60 +165,50 @@ class _PatientCalendarScreenState
 
                   const SizedBox(height: 30),
 
-                  const Text(
+                  Text(
                     "Daily Plan",
                     style: TextStyle(
                       fontSize: 24,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
 
                   const SizedBox(height: 15),
-                                    if (reminders.isEmpty)
-
+                  if (reminders.isEmpty)
                     Container(
                       width: double.infinity,
-                      padding:
-                          const EdgeInsets.all(
-                              20),
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            Colors.white,
-                        borderRadius:
-                            BorderRadius
-                                .circular(
-                                    24),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      child: const Text(
+                      child: Text(
                         "No reminders available",
+                        style: TextStyle(color: subtextColor),
                       ),
                     ),
 
                   ...reminders.map(
                     (doc) {
-
-                      final data =
-                          doc.data()
-                              as Map<String,
-                                  dynamic>;
+                      final data = doc.data() as Map<String, dynamic>;
 
                       final dates =
                           List<String>.from(
-                        data['completedDates'] ??
-                            [],
+                        data['completedDates'] ?? [],
                       );
 
-                      final isDone =
-                          dates.contains(
-                              selectedKey);
+                      final isDone = dates.contains(selectedKey);
 
                       return reminderCard(
                         uid,
                         doc.id,
                         data,
                         isDone,
+                        cardBg,
+                        textColor,
+                        subtextColor,
+                        isDark,
                       );
                     },
                   ),
@@ -277,102 +223,77 @@ class _PatientCalendarScreenState
     );
   }
 
-  Widget buildWeekSelector() {
-
-    final now = DateTime.now();
-
-    final start =
-        now.subtract(
+  Widget buildWeekSelector(Color cardBg, Color textColor, bool isDark) {
+    final now = TimeService.now();
+    final start = now.subtract(
       Duration(
         days: now.weekday - 1,
       ),
     );
 
     return Row(
-      mainAxisAlignment:
-          MainAxisAlignment
-              .spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(
         7,
         (index) {
-
-          final day =
-              start.add(
+          final day = start.add(
             Duration(
               days: index,
             ),
           );
 
           final selected =
-              day.day ==
-                      selectedDate.day &&
-                  day.month ==
-                      selectedDate.month &&
-                  day.year ==
-                      selectedDate.year;
+              day.day == selectedDate.day &&
+              day.month == selectedDate.month &&
+              day.year == selectedDate.year;
 
-          const names = [
-            "M",
-            "T",
-            "W",
-            "T",
-            "F",
-            "S",
-            "S"
-          ];
+          const names = ["M", "T", "W", "T", "F", "S", "S"];
 
           return GestureDetector(
             onTap: () {
               setState(() {
-                selectedDate =
-                    day;
+                selectedDate = day;
               });
             },
             child: Container(
               width: 45,
               height: 70,
-              decoration:
-                  BoxDecoration(
+              decoration: BoxDecoration(
                 color: selected
-                    ? const Color(
-                        0xff2F6FED)
-                    : Colors.white,
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                            18),
+                    ? const Color(0xff2F6FED)
+                    : cardBg,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: isDark
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
               ),
               child: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-
                   Text(
                     names[index],
-                    style:
-                        TextStyle(
+                    style: TextStyle(
                       color: selected
                           ? Colors.white
-                          : Colors
-                              .grey,
+                          : (isDark ? Colors.grey[400] : Colors.grey),
                     ),
                   ),
 
-                  const SizedBox(
-                      height: 5),
+                  const SizedBox(height: 5),
 
                   Text(
-                    day.day
-                        .toString(),
-                    style:
-                        TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .bold,
+                    day.day.toString(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
                       color: selected
                           ? Colors.white
-                          : Colors.black,
+                          : textColor,
                     ),
                   ),
                 ],
@@ -389,78 +310,48 @@ class _PatientCalendarScreenState
     String reminderId,
     Map<String, dynamic> data,
     bool isDone,
+    Color cardBg,
+    Color textColor,
+    Color subtextColor,
+    bool isDark,
   ) {
     return Container(
-      margin:
-          const EdgeInsets.only(
-              bottom: 12),
-      padding:
-          const EdgeInsets.all(18),
-      decoration:
-          BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(
-                22),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
         children: [
-
           GestureDetector(
             onTap: () async {
+              final ref = FirebaseFirestore.instance
+                  .collection('referrals')
+                  .doc(uid)
+                  .collection('reminders')
+                  .doc(reminderId);
 
-              final ref =
-                  FirebaseFirestore
-                      .instance
-                      .collection(
-                          'referrals')
-                      .doc(uid)
-                      .collection(
-                          'reminders')
-                      .doc(
-                          reminderId);
+              final snap = await ref.get();
+              final map = snap.data() ?? {};
 
-              final snap =
-                  await ref.get();
-
-              final map =
-                  snap.data() ?? {};
-
-              List<String>
-                  dates =
-                  List<String>.from(
-                map['completedDates'] ??
-                    [],
+              List<String> dates = List<String>.from(
+                map['completedDates'] ?? [],
               );
 
-              if (dates.contains(
-                  selectedKey)) {
-
-                dates.remove(
-                    selectedKey);
-
+              if (dates.contains(selectedKey)) {
+                dates.remove(selectedKey);
               } else {
-
-                dates.add(
-                    selectedKey);
+                dates.add(selectedKey);
               }
 
               await ref.update({
-                'completedDates':
-                    dates,
+                'completedDates': dates,
               });
             },
-
             child: Icon(
-              isDone
-                  ? Icons
-                      .check_circle
-                  : Icons
-                      .radio_button_unchecked,
-              color: isDone
-                  ? const Color(
-                      0xff34C759)
-                  : Colors.grey,
+              isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: isDone ? const Color(0xff34C759) : (isDark ? Colors.grey[600] : Colors.grey),
               size: 32,
             ),
           ),
@@ -469,36 +360,24 @@ class _PatientCalendarScreenState
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Text(
                   data['title'] ?? '',
-                  style:
-                      TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    fontWeight:
-                        FontWeight
-                            .bold,
-                    decoration:
-                        isDone
-                            ? TextDecoration
-                                .lineThrough
-                            : null,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                    decoration: isDone ? TextDecoration.lineThrough : null,
                   ),
                 ),
 
-                const SizedBox(
-                    height: 4),
+                const SizedBox(height: 4),
 
                 Text(
                   "${data['time']} • ${data['frequency']}",
-                  style:
-                      const TextStyle(
-                    color:
-                        Colors.grey,
+                  style: TextStyle(
+                    color: subtextColor,
                   ),
                 ),
               ],
@@ -506,35 +385,21 @@ class _PatientCalendarScreenState
           ),
 
           Container(
-            padding:
-                const EdgeInsets
-                    .symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: 10,
               vertical: 5,
             ),
-            decoration:
-                BoxDecoration(
+            decoration: BoxDecoration(
               color: isDone
-                  ? const Color(
-                      0xffE8F8EE)
-                  : const Color(
-                      0xffFFF2E5),
-              borderRadius:
-                  BorderRadius
-                      .circular(20),
+                  ? (isDark ? const Color(0xff1A3B2B) : const Color(0xffE8F8EE))
+                  : (isDark ? const Color(0xff3A2A1A) : const Color(0xffFFF2E5)),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              isDone
-                  ? "DONE"
-                  : "PENDING",
-              style:
-                  TextStyle(
-                color: isDone
-                    ? const Color(
-                        0xff34C759)
-                    : Colors.orange,
-                fontWeight:
-                    FontWeight.bold,
+              isDone ? "DONE" : "PENDING",
+              style: TextStyle(
+                color: isDone ? const Color(0xff34C759) : Colors.orange,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),

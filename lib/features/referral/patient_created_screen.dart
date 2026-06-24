@@ -13,11 +13,17 @@ class PatientCreatedScreen extends StatelessWidget {
 
   // 🔥 Dialog
   void showDeliveredDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return Dialog(
+          backgroundColor: dialogBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(25),
           ),
@@ -28,27 +34,28 @@ class PatientCreatedScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 35,
-                  backgroundColor: Colors.green.shade100,
+                  backgroundColor: isDark ? const Color(0x1a34a853) : Colors.green.shade100,
                   child: const Icon(Icons.check,
                       color: Colors.green, size: 30),
                 ),
 
                 const SizedBox(height: 20),
 
-                const Text(
+                Text(
                   "Credentials Delivered",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
                 ),
 
                 const SizedBox(height: 10),
 
-                const Text(
+                Text(
                   "The access credentials have been successfully logged as delivered.\n\nThe patient can now log into the recovery application.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: subtextColor),
                 ),
 
                 const SizedBox(height: 20),
@@ -59,6 +66,7 @@ class PatientCreatedScreen extends StatelessWidget {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff2F6FED),
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
@@ -81,8 +89,13 @@ class PatientCreatedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF3F4F6);
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF3F4F6),
+      backgroundColor: bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -92,32 +105,32 @@ class PatientCreatedScreen extends StatelessWidget {
 
               CircleAvatar(
                 radius: 35,
-                backgroundColor: Colors.green.shade100,
+                backgroundColor: isDark ? const Color(0x1a34a853) : Colors.green.shade100,
                 child: const Icon(Icons.check, color: Colors.green, size: 30),
               ),
 
               const SizedBox(height: 20),
 
-              const Text(
+              Text(
                 "Patient Account Created",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
               ),
 
               const SizedBox(height: 10),
 
-              const Text(
+              Text(
                 "Please share these credentials with the patient.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: subtextColor),
               ),
 
               const SizedBox(height: 30),
 
-              buildBox("USERNAME", email),
+              buildBox(context, "USERNAME", email),
 
               const SizedBox(height: 15),
 
-              buildBox("TEMPORARY PASSWORD", password),
+              buildBox(context, "TEMPORARY PASSWORD", password),
 
               const SizedBox(height: 20),
 
@@ -135,6 +148,7 @@ class PatientCreatedScreen extends StatelessWidget {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xff2F6FED),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -152,11 +166,16 @@ class PatientCreatedScreen extends StatelessWidget {
     );
   }
 
-  Widget buildBox(String title, String value) {
+  Widget buildBox(BuildContext context, String title, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final boxBg = isDark ? const Color(0xff1E1E1E) : Colors.grey.shade200;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: boxBg,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -167,21 +186,21 @@ class PatientCreatedScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey,
+                  color: subtextColor,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 value,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
               ),
             ],
           ),
 
           IconButton(
-            icon: const Icon(Icons.copy),
+            icon: Icon(Icons.copy, color: textColor),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: value));
             },

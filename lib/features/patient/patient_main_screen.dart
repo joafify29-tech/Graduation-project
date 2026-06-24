@@ -4,10 +4,14 @@ import 'patient_home_screen.dart';
 import 'patient_profile_screen.dart';
 import 'patient_progress_screen.dart';
 import 'patient_calendar_screen.dart';
-import 'patient_ai_chat_screen.dart';
+import 'patient_chat_list_screen.dart';
 
 class PatientMainScreen extends StatefulWidget {
   const PatientMainScreen({super.key});
+
+  static _PatientMainScreenState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_PatientMainScreenState>();
+  }
 
   @override
   State<PatientMainScreen> createState() => _PatientMainScreenState();
@@ -15,6 +19,12 @@ class PatientMainScreen extends StatefulWidget {
 
 class _PatientMainScreenState extends State<PatientMainScreen> {
   int currentIndex = 0;
+
+  void changeTab(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }
 
   final List<Widget> screens = const [
     // Home
@@ -24,7 +34,7 @@ class _PatientMainScreenState extends State<PatientMainScreen> {
     PatientProgressScreen(),
 
     // Chat
-const PatientAiChatScreen(),
+    PatientChatListScreen(),
 
     // Calendar
     // Calendar
