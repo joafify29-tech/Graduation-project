@@ -148,15 +148,28 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       await secondaryAuth.signOut();
       await secondaryApp.delete();
 
-      // Restore referral user session to default FirebaseAuth instance
-      if (AuthCredentials.email != null && AuthCredentials.password != null) {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: AuthCredentials.email!,
-          password: AuthCredentials.password!,
-        );
+      // Restore referral user session to default FirebaseAuth instance only if signed out
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || currentUser.email != AuthCredentials.email) {
+        if (AuthCredentials.email != null && AuthCredentials.password != null) {
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: AuthCredentials.email!,
+            password: AuthCredentials.password!,
+          );
+        }
       }
 
       if (!mounted) return;
+
+      nameController.clear();
+      ageController.clear();
+      notesController.clear();
+      setState(() {
+        selectedGender = "Male";
+        addictionType = null;
+        selectedDoctorId = null;
+        selectedDoctorName = null;
+      });
 
       Navigator.push(
         context,

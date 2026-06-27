@@ -685,13 +685,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             await secondaryAuth.signOut();
                             await secondaryApp.delete();
 
-                            // Restore admin user session to default FirebaseAuth instance
-                            if (AuthCredentials.email != null && AuthCredentials.password != null) {
-                              await FirebaseAuth.instance.signInWithEmailAndPassword(
-                                email: AuthCredentials.email!,
-                                password: AuthCredentials.password!,
-                              );
-                            }
+                            // Restore admin user session to default FirebaseAuth instance only if signed out
+                             final currentUser = FirebaseAuth.instance.currentUser;
+                             if (currentUser == null || currentUser.email != AuthCredentials.email) {
+                               if (AuthCredentials.email != null && AuthCredentials.password != null) {
+                                 await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                   email: AuthCredentials.email!,
+                                   password: AuthCredentials.password!,
+                                 );
+                               }
+                             }
 
                             if (context.mounted) {
                               Navigator.pop(context); // Close dialog

@@ -442,6 +442,7 @@ class PatientProgressScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: bars,
                             ),
 

@@ -367,6 +367,25 @@ class HighRiskPatientDetailScreen extends StatelessWidget {
                             .doc(alertData.id)
                             .update({'status': 'RESOLVED'});
 
+                        // Update referral status if there are no other unresolved alerts for this patient
+                        final remainingAlerts = await FirebaseFirestore.instance
+                            .collection('risk_alerts')
+                            .where('patientId', isEqualTo: patientId)
+                            .where('riskLevel', isEqualTo: 'HIGH')
+                            .where('status', isEqualTo: 'UNRESOLVED')
+                            .get();
+
+                        final unresolvedCount = remainingAlerts.docs
+                            .where((doc) => doc.id != alertData.id)
+                            .length;
+
+                        await FirebaseFirestore.instance
+                            .collection('referrals')
+                            .doc(patientId)
+                            .update({
+                          'status': unresolvedCount > 0 ? 'HIGH' : 'LOW',
+                        });
+
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

@@ -227,6 +227,8 @@ class _PatientAiChatScreenState extends State<PatientAiChatScreen> {
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -271,6 +273,7 @@ class _PatientAiChatScreenState extends State<PatientAiChatScreen> {
                       ],
                     ),
                   ),
+
                   GestureDetector(
                     onTap: _showSosBottomSheet,
                     child: Container(

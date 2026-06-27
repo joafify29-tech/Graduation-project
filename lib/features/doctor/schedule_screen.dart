@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'patient_select_screen.dart';
 
 class ScheduleScreen extends StatefulWidget {
@@ -39,146 +40,162 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
-              .collectionGroup('reminders')
+              .collection('referrals')
+              .where('doctorId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
               .snapshots(),
-          builder: (context, snapshot) {
-
-            if (snapshot.connectionState == ConnectionState.waiting) {
+          builder: (context, referralsSnapshot) {
+            if (referralsSnapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (snapshot.hasError) {
-              return Center(child: Text("Error: ${snapshot.error}"));
-            }
+            final referralDocs = referralsSnapshot.data?.docs ?? [];
+            final assignedPatientIds = referralDocs.map((d) => d.id).toSet();
 
-            final docs = snapshot.data?.docs ?? [];
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collectionGroup('reminders')
+                  .snapshots(),
+              builder: (context, snapshot) {
 
-            if (docs.isEmpty) {
-              return const Center(child: Text("No reminders yet"));
-            }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            List<Widget> todayList = [];
-            List<Widget> afternoonList = [];
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
 
-            for (var doc in docs) {
-              final r = doc.data() as Map<String, dynamic>;
+                final rawDocs = snapshot.data?.docs ?? [];
 
-              final title = r['title'] ?? "";
-              final time = r['time'] ?? "";
-              final type = r['type'] ?? "Medication";
-              final high = r['high'] ?? false;
+                // Filter reminders to only show those for assigned patients
+                final docs = rawDocs.where((doc) {
+                  final patientId = doc.reference.parent.parent?.id;
+                  return assignedPatientIds.contains(patientId);
+                }).toList();
 
-              if (search.isNotEmpty &&
-                  !title.toLowerCase().contains(search.toLowerCase())) {
-                continue;
-              }
+                if (docs.isEmpty) {
+                  return const Center(child: Text("No reminders yet"));
+                }
 
-              if (selectedFilter != "All" && selectedFilter != type) {
-                continue;
-              }
+                List<Widget> todayList = [];
+                List<Widget> afternoonList = [];
 
-              final patientId = doc.reference.parent.parent?.id;
+                for (var doc in docs) {
+                  final r = doc.data() as Map<String, dynamic>;
 
-              final card = FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('referrals')
-                    .doc(patientId)
-                    .get(),
-                builder: (context, snap) {
+                  final title = r['title'] ?? "";
+                  final time = r['time'] ?? "";
+                  final type = r['type'] ?? "Medication";
+                  final high = r['high'] ?? false;
 
-                  String name = "Patient";
-
-                  if (snap.hasData && snap.data!.exists) {
-                    final d = snap.data!.data() as Map<String, dynamic>;
-                    name = d['name'] ?? "Patient";
+                  if (search.isNotEmpty &&
+                      !title.toLowerCase().contains(search.toLowerCase())) {
+                    continue;
                   }
 
-                  return reminderCard(name, title, time, type, high);
-                },
-              );
+                  if (selectedFilter != "All" && selectedFilter != type) {
+                    continue;
+                  }
 
-              if (_isMorning(time)) {
-                todayList.add(card);
-              } else {
-                afternoonList.add(card);
-              }
-            }
+                  final patientId = doc.reference.parent.parent?.id;
 
-            return ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
+                  final card = FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('referrals')
+                        .doc(patientId)
+                        .get(),
+                    builder: (context, snap) {
 
-                // 🔝 HEADER
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Patient Reminders",
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: textColor)),
-                    Row(
-                      children: [
-                        Icon(Icons.language, color: isDark ? Colors.white70 : Colors.black),
-                      ],
-                    )
-                  ],
-                ),
+                      String name = "Patient";
 
-                const SizedBox(height: 20),
+                      if (snap.hasData && snap.data!.exists) {
+                        final d = snap.data!.data() as Map<String, dynamic>;
+                        name = d['name'] ?? "Patient";
+                      }
 
-                // 🔍 SEARCH
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: TextField(
-                    onChanged: (val) {
-                      setState(() {
-                        search = val;
-                      });
+                      return reminderCard(name, title, time, type, high, doc.reference);
                     },
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.search, color: isDark ? Colors.white54 : Colors.grey),
-                      hintText: "Search patients or reminders...",
-                      hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
-                      border: InputBorder.none,
+                  );
+
+                  if (_isMorning(time)) {
+                    todayList.add(card);
+                  } else {
+                    afternoonList.add(card);
+                  }
+                }
+
+                return ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+
+                    // 🔝 HEADER
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Patient Reminders",
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: textColor)),
+                      ],
                     ),
-                    style: TextStyle(color: textColor),
-                  ),
-                ),
 
-                const SizedBox(height: 15),
+                    const SizedBox(height: 20),
 
-                // 🔵 FILTERS
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      chip("All"),
-                      chip("Medication"),
-                      chip("Sessions"),
-                      chip("Tests"),
+                    // 🔍 SEARCH
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: TextField(
+                        onChanged: (val) {
+                          setState(() {
+                            search = val;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          icon: Icon(Icons.search, color: isDark ? Colors.white54 : Colors.grey),
+                          hintText: "Search patients or reminders...",
+                          hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
+                          border: InputBorder.none,
+                        ),
+                        style: TextStyle(color: textColor),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 🔵 FILTERS
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          chip("All"),
+                          chip("Medication"),
+                          chip("Sessions"),
+                          chip("Tests"),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    if (todayList.isNotEmpty) ...[
+                      section("UPCOMING TODAY"),
+                      ...todayList,
                     ],
-                  ),
-                ),
 
-                const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                if (todayList.isNotEmpty) ...[
-                  section("UPCOMING TODAY"),
-                  ...todayList,
-                ],
-
-                const SizedBox(height: 20),
-
-                if (afternoonList.isNotEmpty) ...[
-                  section("AFTERNOON"),
-                  ...afternoonList,
-                ],
-              ],
+                    if (afternoonList.isNotEmpty) ...[
+                      section("AFTERNOON"),
+                      ...afternoonList,
+                    ],
+                  ],
+                );
+              },
             );
           },
         ),
@@ -226,7 +243,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Widget reminderCard(
-      String name, String title, String time, String type, bool high) {
+      String name, String title, String time, String type, bool high, DocumentReference ref) {
 
     IconData icon = Icons.medication;
 
@@ -283,12 +300,48 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
           const SizedBox(width: 8),
 
-          Text(
-            time,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                time,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Delete Reminder"),
+                      content: const Text("Are you sure you want to delete this reminder?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await ref.delete();
+                  }
+                },
+                child: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.redAccent,
+                  size: 20,
+                ),
+              ),
+            ],
           )
         ],
       ),

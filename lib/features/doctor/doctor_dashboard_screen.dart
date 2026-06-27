@@ -64,35 +64,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               padding: const EdgeInsets.all(20),
               children: [
                 // 🔝 HEADER
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Doctor Dashboard",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    // 🌐 Language indicator
-                    Row(
-                      children: [
-                        Icon(Icons.language,
-                            color: isDark ? Colors.white70 : Colors.black),
-                        const SizedBox(width: 3),
-                        Text(
-                          "EN",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                isDark ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
+                Text(
+                  "Doctor Dashboard",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
                 ),
 
                 const SizedBox(height: 15),
@@ -345,6 +323,23 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     );
   }
 
+  String _getMoodEmoji(String mood) {
+    switch (mood.toUpperCase()) {
+      case "VERY HAPPY":
+        return "😄";
+      case "HAPPY":
+        return "🙂";
+      case "NEUTRAL":
+        return "😐";
+      case "SAD":
+        return "😔";
+      case "VERY SAD":
+        return "😢";
+      default:
+        return "🙂";
+    }
+  }
+
   // 🔥 PATIENT CARD
   Widget _patientCard(BuildContext context, dynamic data,
       Color cardBg, Color textColor, Color subtextColor) {
@@ -406,8 +401,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      const Text("🙂 ",
-                          style: TextStyle(fontSize: 12)),
+                      Text("${_getMoodEmoji(mood)} ",
+                          style: const TextStyle(fontSize: 12)),
                       Text("Mood: $mood",
                           style: TextStyle(
                               fontSize: 12, color: subtextColor)),

@@ -23,8 +23,14 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
     final name = map['name'] ?? "";
     final id = map['refId'] ?? "";
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+
     return Scaffold(
-      backgroundColor: const Color(0xffF7F8FA),
+      backgroundColor: bg,
 
       body: SafeArea(
         child: ListView(
@@ -36,11 +42,11 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.arrow_back),
+                  child: Icon(Icons.arrow_back, color: textColor),
                 ),
                 const SizedBox(width: 10),
-                const Text("Treatment Plan",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text("Treatment Plan",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
                 const Spacer(),
                 const Text("History",
                     style: TextStyle(color: Color(0xff2F6FED)))
@@ -53,12 +59,22 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(radius: 25),
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: isDark ? const Color(0xff2A2A2A) : const Color(0xffE8E8E8),
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : "?",
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +82,7 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
                       Row(
                         children: [
                           Text(name,
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -84,7 +100,7 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
                         ],
                       ),
                       Text("ID: $id • Age: 34",
-                          style: const TextStyle(color: Colors.grey)),
+                          style: TextStyle(color: subtextColor)),
                     ],
                   )
                 ],
@@ -94,19 +110,21 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
             const SizedBox(height: 20),
 
             // 🔵 NOTES
-            const Text("TREATMENT NOTES",
-                style: TextStyle(color: Colors.grey)),
+            Text("TREATMENT NOTES",
+                style: TextStyle(color: subtextColor)),
 
             const SizedBox(height: 10),
 
             TextField(
               controller: notesController,
               maxLines: 4,
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 hintText:
                     "Enter patient assessment, clinical observations...",
+                hintStyle: TextStyle(color: subtextColor),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: cardBg,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide.none,
@@ -117,8 +135,8 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
             const SizedBox(height: 20),
 
             // 🔵 MEDICATION LIST
-            const Text("MEDICATION LIST",
-                style: TextStyle(color: Colors.grey)),
+            Text("MEDICATION LIST",
+                style: TextStyle(color: subtextColor)),
 
             const SizedBox(height: 10),
 
@@ -138,7 +156,8 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
                 final meds = snapshot.data!.docs;
 
                 if (meds.isEmpty) {
-                  return const Text("No medications added yet");
+                  return Text("No medications added yet",
+                      style: TextStyle(color: subtextColor));
                 }
 
                 return Column(
@@ -183,12 +202,12 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xffE8F0FE),
+                color: isDark ? const Color(0xff1E293B) : const Color(0xffE8F0FE),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: const Text(
+              child: Text(
                 "Changes to the treatment plan will be logged and stored automatically.",
-                style: TextStyle(fontSize: 12),
+                style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[300]! : Colors.black87),
               ),
             ),
 
@@ -201,6 +220,7 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xff2F6FED),
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -218,6 +238,10 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
   // 🔥 MED CARD WITH EDIT + TOGGLE + DELETE
   Widget medicationCard(Map<String, dynamic> med, String docId) {
     final isActive = med['isActive'] ?? true;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
     return GestureDetector(
       onTap: () {
@@ -236,7 +260,7 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
@@ -248,7 +272,7 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
               decoration: BoxDecoration(
                 color: isActive
                     ? const Color(0xff2F6FED)
-                    : Colors.grey,
+                    : subtextColor,
               ),
             ),
 
@@ -262,6 +286,7 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
                     med['name'] ?? "",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                       decoration: isActive
                           ? null
                           : TextDecoration.lineThrough,
@@ -270,12 +295,12 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
                   Text(
                     "${med['dosage']} ${med['type']}",
                     style: TextStyle(
-                      color: isActive ? Colors.blue : Colors.grey,
+                      color: isActive ? Colors.blue : subtextColor,
                     ),
                   ),
                   Text(
                     med['instructions'] ?? "",
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(fontSize: 12, color: textColor),
                   ),
                 ],
               ),
@@ -357,10 +382,15 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
   }
 
   void showSuccessDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     showDialog(
       context: context,
       builder: (_) {
         return Dialog(
+          backgroundColor: dialogBg,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20)),
           child: Padding(
@@ -374,12 +404,13 @@ class _TreatmentPlanScreenState extends State<TreatmentPlanScreen> {
                   child: Icon(Icons.check, color: Colors.white),
                 ),
                 const SizedBox(height: 15),
-                const Text("Plan Saved Successfully",
+                Text("Plan Saved Successfully",
                     style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
+                        fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   "Treatment plan has been updated.",
+                  style: TextStyle(color: textColor),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),

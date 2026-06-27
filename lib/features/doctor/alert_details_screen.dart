@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'reminders_screen.dart';
+import 'treatment_plan_screen.dart';
 
 class AlertDetailsScreen extends StatelessWidget {
   final dynamic data;
@@ -196,14 +198,28 @@ class AlertDetailsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RemindersScreen(data: data),
+                        ),
+                      );
+                    },
                     child: const Text("Schedule"),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TreatmentPlanScreen(data: data),
+                        ),
+                      );
+                    },
                     child: const Text("Update Plan"),
                   ),
                 ),

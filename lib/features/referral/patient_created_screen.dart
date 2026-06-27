@@ -21,7 +21,7 @@ class PatientCreatedScreen extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return Dialog(
           backgroundColor: dialogBg,
           shape: RoundedRectangleBorder(
@@ -72,9 +72,8 @@ class PatientCreatedScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.pop(context); // close dialog
+                      Navigator.pop(dialogContext); // close dialog
                       Navigator.pop(context); // close created screen
-                      Navigator.pop(context); // back to dashboard
                     },
                     child: const Text("Back to Patient Profile"),
                   ),

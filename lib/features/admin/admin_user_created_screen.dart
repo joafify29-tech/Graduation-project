@@ -24,7 +24,7 @@ class AdminUserCreatedScreen extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return Dialog(
           backgroundColor: dialogBg,
           shape: RoundedRectangleBorder(
@@ -68,7 +68,7 @@ class AdminUserCreatedScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.pop(context); // close dialog
+                      Navigator.pop(dialogContext); // close dialog
                       Navigator.pop(context); // close created screen
                     },
                     child: const Text("Back to Users List"),

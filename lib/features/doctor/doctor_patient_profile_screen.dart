@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'alert_details_screen.dart';
 import 'treatment_plan_screen.dart';
 import 'medications_screen.dart';
@@ -19,10 +20,11 @@ class DoctorPatientProfileScreen extends StatelessWidget {
     final age = map['age'] ?? "";
     final addiction = map['addiction'] ?? "";
     final mood = map['mood'] ?? map['currentMood'] ?? "Stable";
+    final status = map['status'] ?? "LOW";
+    final isHigh = status == "HIGH";
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? const Color(0xff121212) : const Color(0xffF7F8FA);
-    final cardBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black;
     final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
 
@@ -44,8 +46,6 @@ class DoctorPatientProfileScreen extends StatelessWidget {
                   "Patient Profile",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
                 ),
-                const Spacer(),
-                Icon(Icons.language, color: textColor),
               ],
             ),
 
@@ -111,64 +111,108 @@ class DoctorPatientProfileScreen extends StatelessWidget {
               children: [
                 Expanded(child: statusCard("LAST MOOD", mood, Colors.blue, isDark)),
                 const SizedBox(width: 10),
-                Expanded(child: statusCard("AI RISK", "Elevated", Colors.red, isDark)),
+                Expanded(
+                  child: statusCard(
+                    "AI RISK",
+                    isHigh ? "Elevated" : "Low",
+                    isHigh ? Colors.red : Colors.green,
+                    isDark,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: statusCard("TASKS", "3 Due", Colors.orange, isDark)),
               ],
             ),
 
-            const SizedBox(height: 20),
+            if (isHigh) ...[
+              const SizedBox(height: 20),
 
-            // 🔵 ALERT
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xff1E293B).withValues(alpha: 0.8) : const Color(0xffE8F0FE),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: isDark ? Colors.blue.withValues(alpha: 0.3) : Colors.transparent,
+              // 🔵 ALERT
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xff1E293B).withValues(alpha: 0.8) : const Color(0xffE8F0FE),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: isDark ? Colors.blue.withValues(alpha: 0.3) : Colors.transparent,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "AI Diagnostic Alert",
+                      style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      "Recent erratic sleep patterns and potential relapse triggers detected based on biometric data.",
+                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[300]! : Colors.black87),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff2F6FED),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AlertDetailsScreen(data: data),
+                              ),
+                            );
+                          },
+                          child: const Text("Review Data", style: TextStyle(color: Colors.white)),
+                        ),
+                        const SizedBox(width: 10),
+                        TextButton(
+                          onPressed: () async {
+                            try {
+                              final patientId = data.id;
+                              
+                              // 1. Resolve all unresolved alerts for this patient in Firestore
+                              final alertsQuery = await FirebaseFirestore.instance
+                                  .collection('risk_alerts')
+                                  .where('patientId', isEqualTo: patientId)
+                                  .where('status', isEqualTo: 'UNRESOLVED')
+                                  .get();
+                                  
+                              final batch = FirebaseFirestore.instance.batch();
+                              for (var doc in alertsQuery.docs) {
+                                batch.update(doc.reference, {'status': 'RESOLVED'});
+                              }
+                              await batch.commit();
+
+                              // 2. Update patient referral status back to LOW
+                              await FirebaseFirestore.instance
+                                  .collection('referrals')
+                                  .doc(patientId)
+                                  .update({'status': 'LOW'});
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("All risk alerts resolved successfully"),
+                                    backgroundColor: Color(0xff34A853),
+                                  ),
+                                );
+                                Navigator.pop(context);
+                              }
+                            } catch (e) {
+                              debugPrint("Error dismissing alerts: $e");
+                            }
+                          },
+                          child: const Text("Dismiss", style: TextStyle(color: Color(0xff2F6FED))),
+                        )
+                      ],
+                    )
+                  ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "AI Diagnostic Alert",
-                    style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    "Recent erratic sleep patterns and potential relapse triggers detected based on biometric data.",
-                    style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[300]! : Colors.black87),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff2F6FED),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => AlertDetailsScreen(data: data),
-                            ),
-                          );
-                        },
-                        child: const Text("Review Data", style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 10),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text("Dismiss", style: TextStyle(color: Color(0xff2F6FED))),
-                      )
-                    ],
-                  )
-                ],
-              ),
-            ),
+            ],
 
             const SizedBox(height: 20),
 

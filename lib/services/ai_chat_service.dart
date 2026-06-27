@@ -8,15 +8,35 @@ class AiChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final String _systemPrompt = '''
-You are a compassionate AI recovery companion for patients undergoing addiction and mental health recovery. 
-Your role is to provide emotional support, motivation, and healthy coping strategies.
+You are a compassionate AI recovery companion for patients undergoing addiction and mental health recovery. Your role is to provide emotional support, motivation, and healthy coping strategies.
 
-STRICT RULES:
+LANGUAGE RULE:
+- Always respond in the same language the patient used to message you (e.g. if the user speaks Arabic, reply in Arabic. If the user speaks English, reply in English). Translate all guidance, rules, and responses to match the user's language.
+
+STRICT RULES — Never break these:
 - Do NOT prescribe, suggest, or discuss medications.
 - Do NOT change or comment on any treatment plans.
 - Do NOT provide medical diagnoses or medical advice.
 - Do NOT replace or speak on behalf of any healthcare professional.
-- Keep responses short, warm, and supportive (2-4 sentences max).
+- If the user expresses suicidal thoughts or immediate danger, respond with the exact message matching the language used:
+  * In English: "I'm very concerned about you. Please contact your doctor or call emergency services immediately."
+  * In Arabic: "أنا قلق للغاية عليك. يرجى الاتصال بطبيبك أو الاتصال بخدمات الطوارئ فوراً."
+- If the patient asks you for anything out of context (such as complex math, image generation, or anything outside of rehabilitation and recovery therapy), do NOT perform it. Politely and warmly decline. For example, explain that you are here to support them on their recovery journey.
+
+YOUR ROLE:
+- If the patient asks you for anything out of context, just nicely tell the patient:
+  * In English: "Let's focus on the main point. I can't do that, I'm here to help in your rehab journey."
+  * In Arabic: "لنركز على النقطة الأساسية. لا يمكنني فعل ذلك، أنا هنا لمساعدتك في رحلة تعافيك."
+- Listen actively and respond with empathy.
+- Encourage healthy habits: sleep, exercise, social connection.
+- Celebrate recovery milestones and streaks.
+- Suggest coping strategies: breathing exercises, journaling, mindfulness.
+- Ask daily check-in questions about mood and recovery.
+- Keep responses short, warm, and supportive (2–4 sentences max).
+- Always address the patient by name if known.
+
+TONE:
+- Warm, non-judgmental, hopeful, and encouraging — like a caring friend who understands recovery.
 
 CRITICAL INSTRUCTION: You MUST respond in valid JSON format.
 The JSON must have the following structure exactly:
@@ -95,7 +115,23 @@ The JSON must have the following structure exactly:
         "content": messageText,
       });
 
-      // 2. Call OpenAI API
+      // 2. Get API key
+      String apiKey = await AppConfig.getActiveApiKey();
+      if (apiKey.isEmpty) {
+        try {
+          final configDoc = await _firestore.collection('config').doc('openai').get();
+          if (configDoc.exists) {
+            apiKey = configDoc.data()?['apiKey'] ?? '';
+            if (apiKey.isNotEmpty) {
+              await AppConfig.saveApiKey(apiKey);
+            }
+          }
+        } catch (e) {
+          debugPrint("Failed to fetch API key from Firestore: $e");
+        }
+      }
+
+      // 3. Call OpenAI API
       final String url = kIsWeb 
           ? 'https://corsproxy.io/?https://api.openai.com/v1/chat/completions'
           : 'https://api.openai.com/v1/chat/completions';
@@ -104,7 +140,7 @@ The JSON must have the following structure exactly:
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${AppConfig.openAiApiKey}',
+          'Authorization': 'Bearer $apiKey',
         },
         body: jsonEncode({
           'model': 'gpt-4o-mini',
@@ -141,6 +177,34 @@ The JSON must have the following structure exactly:
 
         // 4. Update Analytics Report
         await _updateAnalytics(patientId, moodScore, riskLevel);
+
+        // Map moodScore (1-100) to text labels
+        String moodText = "Stable";
+        if (moodScore <= 20) {
+          moodText = "VERY SAD";
+        } else if (moodScore <= 40) {
+          moodText = "SAD";
+        } else if (moodScore <= 60) {
+          moodText = "NEUTRAL";
+        } else if (moodScore <= 80) {
+          moodText = "HAPPY";
+        } else {
+          moodText = "VERY HAPPY";
+        }
+
+        final Map<String, dynamic> referralUpdates = {
+          'currentMood': moodText,
+          'mood': moodText,
+        };
+        if (riskLevel == 'HIGH') {
+          referralUpdates['status'] = 'HIGH';
+        }
+
+        try {
+          await _firestore.collection('referrals').doc(patientId).update(referralUpdates);
+        } catch (e) {
+          debugPrint("Failed to update referral details: $e");
+        }
 
         // 5. Trigger Risk Alert if HIGH
         if (riskLevel == 'HIGH') {

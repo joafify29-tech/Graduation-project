@@ -27,6 +27,99 @@ class PatientProfileScreen extends StatelessWidget {
     );
   }
 
+  void showLogoutDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+    final cancelBtnBg = isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5);
+    final cancelBtnText = isDark ? Colors.white : Colors.black;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: dialogBg,
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: isDark ? const Color(0x1aff4444) : Colors.red.shade100,
+                  child: const Icon(Icons.logout,
+                      color: Colors.red, size: 28),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Log Out?",
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Are you sure you want to log out of your account? You will need to enter your credentials to access the system again.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: subtextColor, height: 1.4),
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: cancelBtnBg,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(color: cancelBtnText),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xffEF4444),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                            logout(context);
+                          },
+                          child: const Text(
+                            "Yes, Log Out",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser!.uid;
@@ -350,42 +443,7 @@ class PatientProfileScreen extends StatelessWidget {
                         ),
                       ),
                       onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) {
-                            return AlertDialog(
-                              backgroundColor: cardBg,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              title: Text(
-                                "Log Out?",
-                                style: TextStyle(color: textColor),
-                              ),
-                              content: Text(
-                                "Are you sure you want to log out?",
-                                style: TextStyle(color: textColor),
-                              ),
-                              actions: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text("Keep Me Logged In"),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    logout(context);
-                                  },
-                                  child: const Text(
-                                    "Yes, Log Out",
-                                    style: TextStyle(color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
+                        showLogoutDialog(context);
                       },
                       child: const Text(
                         "Log Out",

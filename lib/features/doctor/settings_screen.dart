@@ -7,6 +7,7 @@ import 'security_password_screen.dart';
 import 'notifications_screen.dart';
 import 'help_center_screen.dart';
 import '../auth/login_screen.dart';
+import '../patient/privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -23,6 +24,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
+    );
+  }
+
+  void showLogoutDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+    final cancelBtnBg = isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5);
+    final cancelBtnText = isDark ? Colors.white : Colors.black;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: dialogBg,
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: isDark ? const Color(0x1aff4444) : Colors.red.shade100,
+                  child: const Icon(Icons.logout,
+                      color: Colors.red, size: 28),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Log Out?",
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Are you sure you want to log out of your account? You will need to enter your credentials to access the system again.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: subtextColor, height: 1.4),
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: cancelBtnBg,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(color: cancelBtnText),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xffEF4444),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                            logout(context);
+                          },
+                          child: const Text(
+                            "Yes, Log Out",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -55,6 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
   }
+
+
 
 
 
@@ -187,6 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: "English",
                   onTap: _showLanguageBottomSheet,
                 ),
+
                 const SizedBox(height: 20),
 
                 sectionTitle("App Preferences", textCol),
@@ -210,6 +307,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   "Privacy Policy",
                   cardCol,
                   textCol,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PrivacyPolicyScreen(),
+                    ),
+                  ),
                 ),
                 tile(
                   Icons.headset_mic_outlined,
@@ -226,7 +329,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 30),
 
                 GestureDetector(
-                  onTap: () => logout(context),
+                  onTap: () => showLogoutDialog(context),
                   child: Container(
                     height: 55,
                     decoration: BoxDecoration(

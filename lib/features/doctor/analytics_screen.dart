@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'patient_select_screen.dart';
 import 'high_risk_alerts_screen.dart';
 
@@ -168,9 +169,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildPatientSelector() {
+    final currentDoctorUid = FirebaseAuth.instance.currentUser?.uid;
     return StreamBuilder<QuerySnapshot>(
-      stream:
-          FirebaseFirestore.instance.collection('referrals').snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('referrals')
+          .where('doctorId', isEqualTo: currentDoctorUid)
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const SizedBox.shrink();

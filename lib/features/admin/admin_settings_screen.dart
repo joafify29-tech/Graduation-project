@@ -46,39 +46,100 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   void _showLogoutDialog(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dialogBg = isDark ? const Color(0xff1E293B) : Colors.white;
+    final dialogBg = isDark ? const Color(0xff1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xff0F172A);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey;
+    final cancelBtnBg = isDark ? const Color(0xff2A2A2A) : const Color(0xffF0F2F5);
+    final cancelBtnText = isDark ? Colors.white : Colors.black;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: dialogBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text("Log Out", style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
-        content: Text("Are you sure you want to log out of your account?", style: TextStyle(color: textColor.withOpacity(0.8))),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: dialogBg,
+              borderRadius: BorderRadius.circular(25),
             ),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (!context.mounted) return;
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-            child: const Text("Log Out", style: TextStyle(color: Colors.white)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: isDark ? const Color(0x1aff4444) : Colors.red.shade100,
+                  child: const Icon(Icons.logout,
+                      color: Colors.red, size: 28),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Log Out?",
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Are you sure you want to log out of your account? You will need to enter your credentials to access the system again.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: subtextColor, height: 1.4),
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: cancelBtnBg,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(color: cancelBtnText),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xffEF4444),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextButton(
+                          onPressed: () async {
+                            Navigator.pop(dialogContext);
+                            await FirebaseAuth.instance.signOut();
+                            if (!context.mounted) return;
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                              (route) => false,
+                            );
+                          },
+                          child: const Text(
+                            "Yes, Log Out",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

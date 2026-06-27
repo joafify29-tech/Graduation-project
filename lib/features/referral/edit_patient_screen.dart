@@ -278,8 +278,8 @@ class _EditPatientScreenState extends State<EditPatientScreen> {
             child: Row(
               children: [
                 statusBtn(context, "ACTIVE"),
-                statusBtn(context, "REVIEW"),
-                statusBtn(context, "REJECTED"),
+                statusBtn(context, "DISCHARGED"),
+                statusBtn(context, "PENDING"),
               ],
             ),
           ),
