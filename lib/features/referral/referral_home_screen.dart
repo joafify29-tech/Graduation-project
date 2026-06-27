@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'referral_details_screen.dart';
 import '../../core/main_screen.dart';
 
@@ -121,7 +122,6 @@ class _ReferralHomeScreenState extends State<ReferralHomeScreen> {
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('referrals')
-                      .orderBy('createdAt', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
 
@@ -129,13 +129,26 @@ class _ReferralHomeScreenState extends State<ReferralHomeScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
 
+                    final currentUid = FirebaseAuth.instance.currentUser?.uid;
                     var docs = snapshot.data!.docs;
 
+                    // Filter by referralId in memory
                     var filteredDocs = docs.where((doc) {
-                      String name =
-                          doc['name'].toString().toLowerCase();
-                      return name.contains(searchText);
+                      final data = doc.data() as Map<String, dynamic>;
+                      final matchesReferral = data['referralId'] == currentUid;
+                      String name = (data['name'] ?? "").toString().toLowerCase();
+                      return matchesReferral && name.contains(searchText);
                     }).toList();
+
+                    // Sort by createdAt descending in memory
+                    filteredDocs.sort((a, b) {
+                      final aTime = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                      final bTime = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                      if (aTime == null && bTime == null) return 0;
+                      if (aTime == null) return 1;
+                      if (bTime == null) return -1;
+                      return bTime.compareTo(aTime);
+                    });
 
                     return ListView.builder(
                       itemCount: filteredDocs.length,

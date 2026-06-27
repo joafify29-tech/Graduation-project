@@ -505,13 +505,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       enabled: !isLoading,
                       style: TextStyle(color: textColor),
                       decoration: InputDecoration(
-                        labelText: "Age",
+                        labelText: selectedRole == 'Referral' ? "Address (Location)" : "Age",
                         labelStyle: TextStyle(color: labelColor),
                         filled: true,
                         fillColor: fieldBg,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: selectedRole == 'Referral' ? TextInputType.text : TextInputType.number,
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
@@ -649,7 +649,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
                             final userData = {
                               'name': name,
-                              'age': age,
+                              if (role == 'referral') ...{
+                                'location': age,
+                                'address': age,
+                              } else ...{
+                                'age': age,
+                              },
                               'role': role,
                               'status': 'Active',
                               'email': email,

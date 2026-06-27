@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'referral_details_screen.dart';
 
 class ReferralHistoryScreen extends StatefulWidget {
@@ -95,7 +96,6 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('referrals')
-                      .orderBy('createdAt', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState ==
@@ -114,14 +114,30 @@ class _ReferralHistoryScreenState extends State<ReferralHistoryScreen> {
                       );
                     }
 
+                    final currentUid = FirebaseAuth.instance.currentUser?.uid;
                     var docs = snapshot.data!.docs;
 
-                    // 🔍 Filter + Search
+                    // Filter by referralId in memory
                     var filteredDocs = docs.where((doc) {
-                      String name =
-                          doc['name'].toString().toLowerCase();
-                      String status =
-                          doc['status'].toString().toUpperCase();
+                      final data = doc.data() as Map<String, dynamic>;
+                      return data['referralId'] == currentUid;
+                    }).toList();
+
+                    // Sort by createdAt descending in memory
+                    filteredDocs.sort((a, b) {
+                      final aTime = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                      final bTime = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+                      if (aTime == null && bTime == null) return 0;
+                      if (aTime == null) return 1;
+                      if (bTime == null) return -1;
+                      return bTime.compareTo(aTime);
+                    });
+
+                    // 🔍 Search + status filter in memory
+                    filteredDocs = filteredDocs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      String name = (data['name'] ?? "").toString().toLowerCase();
+                      String status = (data['status'] ?? "ACTIVE").toString().toUpperCase();
 
                       bool matchesSearch = name.contains(searchText);
 

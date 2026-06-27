@@ -84,6 +84,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   }
 
   Future<void> addPatient() async {
+    final String? referralId = FirebaseAuth.instance.currentUser?.uid;
     String name = nameController.text.trim();
     String age = ageController.text.trim();
     String notes = notesController.text.trim();
@@ -130,6 +131,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         "role": "patient",
         "doctorId": selectedDoctorId,
         "doctorName": selectedDoctorName,
+        "referralId": referralId,
         "createdAt": Timestamp.now(),
       });
 
@@ -142,6 +144,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         "role": "patient",
         "doctorId": selectedDoctorId,
         "doctorName": selectedDoctorName,
+        "referralId": referralId,
         "createdAt": Timestamp.now(),
       });
 
